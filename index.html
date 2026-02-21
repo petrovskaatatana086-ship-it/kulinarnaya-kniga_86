@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -8,28 +9,22 @@
     <style>
         :root { --olive: #556b2f; --milk: #f4f1ea; --white: #ffffff; --text: #333; --gray: #888; }
         body.dark-mode { --milk: #121212; --white: #1e1e1e; --text: #e0e0e0; --gray: #aaa; }
-        
-        body { font-family: 'Inter', sans-serif; background: var(--milk); color: var(--text); margin: 0; padding-bottom: 80px; transition: 0.3s; }
+        body { font-family: 'Inter', sans-serif; background: var(--milk); color: var(--text); margin: 0; transition: 0.3s; }
         header { background: var(--white); padding: 15px 5%; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
         .nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        
-        input[type="text"] { width: 100%; padding: 12px 20px; border-radius: 25px; border: 1px solid #ddd; background: var(--white); color: var(--text); outline: none; }
+        .filters-bar { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .sel-custom { padding: 10px 15px; border-radius: 20px; border: 1.5px solid var(--olive); background: var(--white); color: var(--text); cursor: pointer; outline: none; white-space: nowrap; }
         .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-        
-        .cat-title { color: var(--olive); font-size: 1.8rem; border-left: 5px solid var(--olive); padding-left: 15px; margin-top: 40px; }
         .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .recipe-card { background: var(--white); border-radius: 15px; overflow: hidden; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .recipe-img-box { width: 100%; height: 200px; background: #333; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        
-        .servings-ctrl { display: flex; align-items: center; gap: 15px; background: rgba(85,107,47,0.1); padding: 10px 20px; border-radius: 25px; margin: 15px 0; width: fit-content; }
-        .step-item { padding: 15px; border-radius: 12px; background: var(--white); margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); line-height: 1.6; transition: 0.2s; }
-        .step-item.done { opacity: 0.5; background: #dcfce7; color: #166534; text-decoration: line-through; border-color: #bbf7d0; }
-        
-        .shop-card { background: var(--white); padding: 25px; border-radius: 20px; border: 2px solid var(--olive); }
-        .btn { padding: 12px 24px; border-radius: 25px; border: none; cursor: pointer; font-weight: 600; font-family: inherit; transition: 0.2s; }
+        .recipe-card { background: var(--white); border-radius: 20px; overflow: hidden; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .img-box { width: 100%; height: 200px; background: #333; display: flex; align-items: center; justify-content: center; }
+        .step-item { padding: 15px; border-radius: 12px; background: var(--white); margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); line-height: 1.6; }
+        .step-item.done { opacity: 0.4; background: #dcfce7; color: #166534; text-decoration: line-through; }
+        .shop-card { background: var(--white); padding: 25px; border-radius: 20px; border: 2px solid var(--olive); margin-bottom: 20px; }
+        .summary-box { background: #fefce8; border: 2px dashed #eab308; padding: 20px; border-radius: 15px; }
+        .btn { padding: 12px 24px; border-radius: 25px; border: none; cursor: pointer; font-weight: 600; }
         .btn-olive { background: var(--olive); color: white; }
         .btn-mode { background: #444; color: white; font-size: 0.8rem; }
-        
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; }
         .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--white); padding: 25px; border-radius: 20px; z-index: 1000; width: 90%; max-width: 400px; }
     </style>
@@ -38,72 +33,73 @@
     <div id="app">
         <header>
             <div class="nav-top">
-                <div @click="page = 'home'" style="cursor:pointer; font-weight:600; color:var(--olive); font-size:1.4rem;">🌿 ScandiKitchen</div>
+                <div @click="resetHome" style="cursor:pointer; font-weight:600; color:var(--olive); font-size:1.4rem;">🌿 ScandiKitchen</div>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-mode" @click="darkMode = !darkMode">{{ darkMode ? '☀️ СВЕТ' : '🌙 ТЬМА' }}</button>
+                    <button class="btn btn-mode" @click="darkMode = !darkMode">{{ darkMode ? '☀️ СВЕТ' : '🌙 ТЕМНАЯ' }}</button>
                     <button class="btn btn-olive" @click="page = 'planner'">🛒 СПИСОК</button>
                 </div>
             </div>
-            <input type="text" v-if="page === 'home'" v-model="search" placeholder="🔍 Поиск по названию или ингредиенту...">
+            <div class="filters-bar" v-if="page === 'home'">
+                <select v-model="selCat" class="sel-custom">
+                    <option value="">Все категории</option>
+                    <option v-for="c in categoriesOrder" :key="c" :value="c">{{ c }}</option>
+                </select>
+                <select v-model="selSub" class="sel-custom" :disabled="!selCat">
+                    <option value="">Подкатегория</option>
+                    <option v-for="s in availableSubs" :key="s" :value="s">{{ s }}</option>
+                </select>
+                <input type="text" v-model="search" placeholder="🔍 Поиск..." style="border-radius:20px; border:1px solid #ddd; padding:0 15px; flex-grow:1;">
+            </div>
         </header>
 
         <div class="container">
             <div v-if="page === 'home'">
-                <div v-for="cat in uniqueCategories" :key="cat">
-                    <h2 class="cat-title">{{ cat }}</h2>
-                    <div v-for="sub in getSubcategories(cat)" :key="sub">
-                        <h4 style="color:var(--gray); margin: 25px 0 10px; letter-spacing: 1px;">{{ sub.toUpperCase() }}</h4>
-                        <div class="recipe-grid">
-                            <div v-for="r in filteredRecipes(cat, sub)" :key="r.id" class="recipe-card" @click="openRecipe(r)">
-                                <div class="recipe-img-box">
-                                    <img v-if="userPhotos[r.id]" :src="userPhotos[r.id]" style="width:100%; height:100%; object-fit:cover;">
-                                    <span v-else style="color:white">📷 Загрузите фото</span>
-                                </div>
-                                <div style="padding:15px;"><h3>{{ r.title }}</h3></div>
-                            </div>
+                <div class="recipe-grid">
+                    <div v-for="r in filteredList" :key="r.id" class="recipe-card" @click="openRecipe(r)">
+                        <div class="img-box">
+                            <img v-if="userPhotos[r.id]" :src="userPhotos[r.id]" style="width:100%; height:100%; object-fit:cover;">
+                            <span v-else style="color:white">📷 Добавить фото</span>
+                        </div>
+                        <div style="padding:15px;">
+                            <div style="font-size:0.7rem; color:var(--olive); margin-bottom:5px;">{{ r.category }}</div>
+                            <h3 style="margin:0;">{{ r.title }}</h3>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div v-if="page === 'recipe'">
-                <button class="btn" @click="page = 'home'" style="background:#ddd;">← К РЕЦЕПТАМ</button>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:40px; margin-top:30px;">
+                <button class="btn" @click="page = 'home'" style="background:#ddd;">← НАЗАД</button>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:40px; margin-top:25px;">
                     <div>
-                        <div class="recipe-img-box" style="height:400px; border-radius:20px; box-shadow: 0 15px 30px rgba(0,0,0,0.2);">
+                        <div class="img-box" style="height:350px; border-radius:20px;">
                             <img v-if="userPhotos[currentRecipe.id]" :src="userPhotos[currentRecipe.id]" style="width:100%; height:100%; object-fit:cover;">
-                            <span v-else style="color:white">ФОТО НЕ ЗАГРУЖЕНО</span>
+                            <span v-else style="color:white">📷 НЕТ ФОТО</span>
                         </div>
-                        <label class="btn" style="background:#eee; display:block; margin:15px 0; text-align:center; color:#333;">
-                            📷 ЗАГРУЗИТЬ / ИЗМЕНИТЬ ФОТО
-                            <input type="file" @change="uploadPhoto" hidden accept="image/*">
+                        <label class="btn" style="background:#eee; display:block; margin:15px 0; text-align:center; color:#333; font-size:0.8rem;">
+                            СМЕНИТЬ ФОТО <input type="file" @change="uploadPhoto" hidden accept="image/*">
                         </label>
-                        <div class="servings-ctrl">
-                            <span>Количество порций:</span>
+                        <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+                            <span>Порций:</span>
                             <button @click="servings > 1 ? servings-- : null" class="btn" style="padding:5px 15px;">-</button>
                             <b style="font-size:1.2rem;">{{ servings }}</b>
                             <button @click="servings++" class="btn" style="padding:5px 15px;">+</button>
                         </div>
-                        <button class="btn btn-olive" style="width:100%;" @click="showPicker = true">📅 ДОБАВИТЬ В ПЛАН</button>
-                        <a v-if="currentRecipe.video" :href="currentRecipe.video" target="_blank" class="btn" style="background:#24A1DE; color:white; width:100%; margin-top:10px; display:block;">🎬 СМОТРЕТЬ ВИДЕО</a>
+                        <button class="btn btn-olive" style="width:100%;" @click="showPicker = true">📅 В ПЛАН</button>
+                        <a v-if="currentRecipe.video" :href="currentRecipe.video" target="_blank" class="btn" style="background:#24A1DE; color:white; width:100%; margin-top:10px; display:block; text-align:center; text-decoration:none;">🎬 СМОТРЕТЬ ВИДЕО</a>
                     </div>
                     <div>
-                        <h1 style="margin-top:0;">{{ currentRecipe.title }}</h1>
-                        <p style="color:var(--olive); font-weight:600;">{{ currentRecipe.category }} | {{ currentRecipe.subcategory }}</p>
-                        
-                        <h3 style="margin-top:30px; border-bottom:1px solid #ddd; padding-bottom:10px;">🛒 ИНГРЕДИЕНТЫ</h3>
+                        <h1 style="margin:0;">{{ currentRecipe.title }}</h1>
+                        <h3 style="margin-top:30px;">🛒 ИНГРЕДИЕНТЫ</h3>
                         <ul style="list-style:none; padding:0;">
-                            <li v-for="ing in currentRecipe.ingredients" style="padding:10px 0; border-bottom:1px dotted #ccc; display:flex; justify-content:space-between;">
+                            <li v-for="ing in currentRecipe.ingredients" style="padding:8px 0; border-bottom:1px dotted #ccc; display:flex; justify-content:space-between;">
                                 <span>🔹 {{ ing.name }}</span>
-                                <b style="color:var(--olive)">{{ calculateAmount(ing.amount) }} {{ ing.unit }}</b>
+                                <b>{{ ( (ing.amount / currentRecipe.servings) * servings ).toFixed(1).replace('.0','') }} {{ ing.unit }}</b>
                             </li>
                         </ul>
-
-                        <h3 style="margin-top:40px; border-bottom:1px solid #ddd; padding-bottom:10px;">👨‍🍳 ПОШАГОВЫЙ ПЛАН</h3>
-                        <p style="font-size:0.8rem; color:var(--gray); margin-bottom:15px;">Нажимайте на выполненный шаг, чтобы не запутаться:</p>
+                        <h3 style="margin-top:30px;">👨‍🍳 ПРИГОТОВЛЕНИЕ (слово в слово)</h3>
                         <div v-for="(step, idx) in currentRecipe.steps" :key="idx" 
-                             class="step-item" :class="{done: isStepDone(idx)}"
-                             @click="toggleStep(idx)">
+                             class="step-item" :class="{done: stepProgress[currentRecipe.id]?.includes(idx)}" @click="toggleStep(idx)">
                             {{ step }}
                         </div>
                     </div>
@@ -112,39 +108,35 @@
 
             <div v-if="page === 'planner'">
                 <button class="btn" @click="page = 'home'" style="background:#ddd;">← НАЗАД</button>
-                <div class="shop-card" style="margin-top:30px;">
-                    <h2 style="margin-top:0;">🛒 ВАШ СПИСОК ПОКУПОК</h2>
-                    <div v-if="Object.keys(summarizedList).length === 0" style="padding:40px; text-align:center; color:var(--gray);">
-                        План пуст. Добавьте рецепты в план питания!
-                    </div>
-                    <div v-for="(val, name) in summarizedList" :key="name" 
-                         style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; border-bottom:1px solid #eee;"
-                         :class="{ completed: getInvn(name).done }">
-                        <div style="display:flex; align-items:center;">
-                            <input type="checkbox" v-model="getInvn(name).done" @change="saveInvn" style="width:20px; height:20px; cursor:pointer;">
-                            <span style="margin-left:15px; font-weight:600;">{{ name }}</span>
+                <div class="shop-card" style="margin-top:25px;">
+                    <h2 style="margin:0 0 15px 0;">🛒 ПРОВЕРКА НАЛИЧИЯ</h2>
+                    <div v-for="(val, name) in summarizedList" :key="name" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee;">
+                        <div>
+                            <input type="checkbox" v-model="getInvn(name).done" @change="saveInvn">
+                            <span :style="getInvn(name).done ? 'text-decoration:line-through; opacity:0.5' : ''" style="margin-left:10px; font-weight:600;">{{ name }}</span>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-size:0.8rem; color:var(--gray);">ЕСТЬ ДОМА:</div>
-                            <input type="number" v-model.number="getInvn(name).have" style="width:60px; padding:5px; border:1px solid #ddd; border-radius:5px;" @input="saveInvn">
-                            <div style="font-weight:600; color:var(--olive); margin-top:5px;">
-                                КУПИТЬ: {{ (val.amount - (inventory[name]?.have || 0)) > 0 ? (val.amount - (inventory[name]?.have || 0)).toFixed(1).replace('.0','') + ' ' + val.unit : '✅' }}
-                            </div>
+                            <span style="font-size:0.8rem; color:var(--gray);">ЕСТЬ: </span>
+                            <input type="number" v-model.number="getInvn(name).have" style="width:50px;" @input="saveInvn">
+                            <span>/ {{ val.amount.toFixed(1).replace('.0','') }} {{ val.unit }}</span>
                         </div>
                     </div>
-                    <button v-if="Object.keys(summarizedList).length > 0" class="btn btn-olive" style="width:100%; margin-top:30px; padding:20px;" @click="sendToTelegram">
-                        ✈️ ОТПРАВИТЬ ПЛАН И СПИСОК В TELEGRAM
-                    </button>
+                </div>
+                <div class="summary-box" v-if="finalToBuy.length > 0">
+                    <h3 style="margin-top:0;">📋 ИТОГО К ПОКУПКЕ:</h3>
+                    <div v-for="item in finalToBuy" :key="item.name" style="margin-bottom:5px;">
+                        📍 {{ item.name }}: {{ item.amount }} {{ item.unit }}
+                    </div>
+                    <button class="btn btn-olive" style="width:100%; margin-top:20px;" @click="sendToTG">✈️ ОТПРАВИТЬ В TELEGRAM</button>
                 </div>
             </div>
         </div>
 
         <div class="overlay" v-if="showPicker" @click="showPicker = false"></div>
         <div class="modal" v-if="showPicker">
-            <h3 style="margin-top:0;">В КАКОЙ ДЕНЬ ГОТОВИМ?</h3>
+            <h3>В КАКОЙ ДЕНЬ ГОТОВИМ?</h3>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <button v-for="day in ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']" @click="addToPlan(day)" 
-                        class="btn" style="background:#f0f0f0; color:#333;">{{ day }}</button>
+                <button v-for="day in ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']" @click="addPlan(day)" class="btn" style="background:#f0f0f0;">{{ day }}</button>
             </div>
         </div>
     </div>
@@ -155,7 +147,8 @@
         createApp({
             data() {
                 return {
-                    page: 'home', search: '', showPicker: false, darkMode: false,
+                    page: 'home', search: '', selCat: '', selSub: '', showPicker: false, darkMode: false,
+                    categoriesOrder: ['🍲 Супы', '🥗 Салаты', '🍖 Основные блюда (мясо, птица)', '🐟 Основные блюда (рыба, морепродукты)', '🍝 Гарниры', '🥐 Выпечка', '🍰 Десерты', '🥤 Напитки', '🥪 Закуски и бутерброды', '🧂 Соусы'],
                     recipes: typeof myRecipes !== 'undefined' ? myRecipes : [],
                     currentRecipe: null, servings: 1,
                     userPhotos: JSON.parse(localStorage.getItem('userPhotos') || '{}'),
@@ -165,68 +158,66 @@
                 }
             },
             computed: {
-                uniqueCategories() { return [...new Set(this.recipes.map(r => r.category))]; },
+                availableSubs() {
+                    if (!this.selCat) return [];
+                    return [...new Set(this.recipes.filter(r => r.category === this.selCat).map(r => r.subcategory))];
+                },
+                filteredList() {
+                    return this.recipes.filter(r => {
+                        const cM = !this.selCat || r.category === this.selCat;
+                        const sM = !this.selSub || r.subcategory === this.selSub;
+                        const tM = r.title.toLowerCase().includes(this.search.toLowerCase()) || r.ingredients.some(i => i.name.toLowerCase().includes(this.search.toLowerCase()));
+                        return cM && sM && tM;
+                    });
+                },
                 summarizedList() {
                     let sum = {};
-                    Object.values(this.plan).flat().forEach(item => {
-                        const r = this.recipes.find(rec => rec.title === item.title);
+                    Object.values(this.plan).flat().forEach(p => {
+                        const r = this.recipes.find(x => x.title === p.title);
                         if (r) r.ingredients.forEach(i => {
                             if(!sum[i.name]) sum[i.name] = { amount: 0, unit: i.unit };
                             sum[i.name].amount += i.amount;
                         });
                     });
                     return sum;
+                },
+                finalToBuy() {
+                    let res = [];
+                    for (let n in this.summarizedList) {
+                        const need = this.summarizedList[n].amount;
+                        const have = this.inventory[n]?.have || 0;
+                        if (!this.inventory[n]?.done && (need - have) > 0) {
+                            res.push({ name: n, amount: (need - have).toFixed(1).replace('.0',''), unit: this.summarizedList[n].unit });
+                        }
+                    }
+                    return res;
                 }
             },
             methods: {
-                getSubcategories(cat) { return [...new Set(this.recipes.filter(r => r.category === cat).map(r => r.subcategory))]; },
-                filteredRecipes(cat, sub) {
-                    return this.recipes.filter(r => {
-                        const matchSearch = r.title.toLowerCase().includes(this.search.toLowerCase()) || 
-                                          r.ingredients.some(i => i.name.toLowerCase().includes(this.search.toLowerCase()));
-                        return r.category === cat && r.subcategory === sub && matchSearch;
-                    });
-                },
-                openRecipe(r) { 
-                    this.currentRecipe = r; 
-                    this.servings = r.servings || 1;
-                    this.page = 'recipe'; 
-                    window.scrollTo(0,0); 
-                },
-                calculateAmount(amt) { return ((amt / (this.currentRecipe.servings || 1)) * this.servings).toFixed(1).replace('.0', ''); },
-                isStepDone(idx) { return this.stepProgress[this.currentRecipe.id]?.includes(idx); },
+                resetHome() { this.page = 'home'; this.selCat = ''; this.selSub = ''; this.search = ''; },
+                openRecipe(r) { this.currentRecipe = r; this.servings = r.servings; this.page = 'recipe'; window.scrollTo(0,0); },
                 toggleStep(idx) {
                     if(!this.stepProgress[this.currentRecipe.id]) this.stepProgress[this.currentRecipe.id] = [];
-                    const list = this.stepProgress[this.currentRecipe.id];
-                    list.includes(idx) ? list.splice(list.indexOf(idx), 1) : list.push(idx);
+                    const l = this.stepProgress[this.currentRecipe.id];
+                    l.includes(idx) ? l.splice(l.indexOf(idx), 1) : l.push(idx);
                     localStorage.setItem('stepProgress', JSON.stringify(this.stepProgress));
                 },
-                getInvn(name) { if(!this.inventory[name]) this.inventory[name] = {have:0, done:false}; return this.inventory[name]; },
+                getInvn(n) { if(!this.inventory[n]) this.inventory[n] = {have:0, done:false}; return this.inventory[n]; },
                 saveInvn() { localStorage.setItem('userInventory', JSON.stringify(this.inventory)); },
                 uploadPhoto(e) {
                     const reader = new FileReader();
-                    reader.onload = (f) => {
-                        this.userPhotos[this.currentRecipe.id] = f.target.result;
-                        localStorage.setItem('userPhotos', JSON.stringify(this.userPhotos));
-                    };
+                    reader.onload = (f) => { this.userPhotos[this.currentRecipe.id] = f.target.result; localStorage.setItem('userPhotos', JSON.stringify(this.userPhotos)); };
                     reader.readAsDataURL(e.target.files[0]);
                 },
-                addToPlan(day) {
+                addPlan(day) {
                     this.plan[day].push({ title: this.currentRecipe.title });
                     localStorage.setItem('userPlan', JSON.stringify(this.plan));
                     this.showPicker = false;
                 },
-                sendToTelegram() {
-                    let text = "📋 МОЙ ПЛАН ПИТАНИЯ 🌿\n\n";
-                    for(let day in this.plan) {
-                        if(this.plan[day].length) text += `📍 ${day}: ${this.plan[day].map(p=>p.title).join(', ')}\n`;
-                    }
-                    text += "\n🛒 КУПИТЬ В МАГАЗИНЕ:\n";
-                    for(let name in this.summarizedList) {
-                        const buy = this.summarizedList[name].amount - (this.inventory[name]?.have || 0);
-                        if(buy > 0 && !this.inventory[name]?.done) text += `- ${name}: ${buy.toFixed(1).replace('.0','')} ${this.summarizedList[name].unit}\n`;
-                    }
-                    window.open(`https://t.me/share/url?url=${encodeURIComponent(text)}`, '_blank');
+                sendToTG() {
+                    let t = "🛒 СПИСОК ПОКУПОК 🌿\n\n";
+                    this.finalToBuy.forEach(i => t += `▫️ ${i.name}: ${i.amount} ${i.unit}\n`);
+                    window.open(`https://t.me/share/url?url=${encodeURIComponent(t)}`, '_blank');
                 }
             }
         }).mount('#app')
