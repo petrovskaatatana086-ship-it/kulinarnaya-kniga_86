@@ -8,6 +8,7 @@
     <style>
         :root {
             --olive: #556b2f; --milk: #f4f1ea; --dark: #2c2c2c; --white: #ffffff;
+            --tg-blue: #24A1DE;
             --shadow: 0 4px 15px rgba(0,0,0,0.05); --transition: all 0.3s ease;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -18,17 +19,17 @@
             box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
         }
         .logo { font-weight: 600; font-size: 1.5rem; color: var(--olive); cursor: pointer; }
-        
         .nav-controls { display: flex; gap: 12px; align-items: center; }
         .search-input { padding: 8px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none; width: 180px; font-family: inherit; }
 
-        .btn { padding: 8px 18px; border-radius: 20px; border: none; cursor: pointer; transition: var(--transition); font-weight: 500; font-family: inherit; }
+        .btn { padding: 8px 18px; border-radius: 20px; border: none; cursor: pointer; transition: var(--transition); font-weight: 500; font-family: inherit; text-decoration: none; display: inline-block; }
         .btn-primary { background: var(--olive); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--olive); color: var(--olive); }
+        .btn-video { background: var(--tg-blue); color: white; width: 100%; text-align: center; margin-top: 15px; }
+        .btn-video:hover { background: #1e87bb; }
         
         .container { max-width: 1200px; margin: 2rem auto; padding: 0 20px; }
 
-        /* КАТЕГОРИИ (Фильтры) */
         .categories-nav { display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; padding: 5px 0; }
         .cat-chip { 
             white-space: nowrap; padding: 6px 16px; background: var(--white); border-radius: 20px; 
@@ -36,13 +37,6 @@
         }
         .cat-chip.active { background: var(--olive); color: white; border-color: var(--olive); }
 
-        /* Сетка планировщика */
-        .planner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .day-card { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); }
-        .day-name { font-weight: 600; color: var(--olive); border-bottom: 2px solid var(--milk); margin-bottom: 10px; }
-        .planned-item { font-size: 0.85rem; padding: 8px; background: var(--milk); border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; }
-
-        /* Рецепты */
         .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
         .recipe-card { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: var(--transition); cursor: pointer; }
         .recipe-card:hover { transform: translateY(-5px); }
@@ -50,7 +44,11 @@
         .recipe-info { padding: 15px; }
         .category-tag { font-size: 0.75rem; color: var(--olive); text-transform: uppercase; font-weight: 600; }
 
-        /* Модалка */
+        .planner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .day-card { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); }
+        .day-name { font-weight: 600; color: var(--olive); border-bottom: 2px solid var(--milk); margin-bottom: 10px; }
+        .planned-item { font-size: 0.85rem; padding: 8px; background: var(--milk); border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; }
+
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 299; backdrop-filter: blur(2px); }
         .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; z-index: 300; width: 90%; max-width: 400px; }
 
@@ -71,23 +69,23 @@
         <header>
             <div class="logo" @click="resetFilters">🌿 ScandiKitchen</div>
             <div class="nav-controls">
-                <input type="text" v-model="search" placeholder="Поиск рецепта..." class="search-input" v-if="page === 'home'">
+                <input type="text" v-model="search" placeholder="Поиск по рецептам..." class="search-input" v-if="page === 'home'">
                 <button class="btn btn-outline" @click="page = 'planner'">📅 План</button>
-                <button class="btn btn-primary" @click="sendToTelegram">✈ Список в TG</button>
+                <button class="btn btn-primary" @click="sendToTelegram">✈ План в TG</button>
             </div>
         </header>
 
         <div class="container">
             <div v-if="page === 'planner'">
-                <button class="btn btn-outline" @click="page = 'home'" style="margin-bottom:20px;">← К рецептам</button>
+                <button class="btn btn-outline" @click="page = 'home'" style="margin-bottom:20px;">← Назад</button>
                 <h2 style="margin-bottom: 20px;">План на неделю</h2>
                 <div class="planner-grid">
                     <div v-for="(meals, day) in plan" :key="day" class="day-card">
                         <div class="day-name">{{ day }}</div>
-                        <div v-if="meals.length === 0" style="color:#ccc; font-size:0.8rem">Ничего не добавлено</div>
+                        <div v-if="meals.length === 0" style="color:#ccc; font-size:0.8rem">Пусто</div>
                         <div v-for="(meal, idx) in meals" :key="idx" class="planned-item">
                             <span>{{ meal.title }}</span>
-                            <span style="color:red; cursor:pointer; font-weight:bold" @click="removeFromPlan(day, idx)">×</span>
+                            <span style="color:red; cursor:pointer;" @click="removeFromPlan(day, idx)">×</span>
                         </div>
                     </div>
                 </div>
@@ -96,13 +94,8 @@
             <div v-if="page === 'home'">
                 <div class="categories-nav">
                     <div class="cat-chip" :class="{active: activeCat === 'Все'}" @click="activeCat = 'Все'">Все</div>
-                    <div v-for="cat in availableCategories" :key="cat" 
-                         class="cat-chip" :class="{active: activeCat === cat}" 
-                         @click="activeCat = cat">
-                        {{ cat }}
-                    </div>
+                    <div v-for="cat in availableCategories" :key="cat" class="cat-chip" :class="{active: activeCat === cat}" @click="activeCat = cat">{{ cat }}</div>
                 </div>
-
                 <div class="recipe-grid">
                     <div v-for="r in filteredRecipes" :key="r.id" class="recipe-card" @click="openRecipe(r)">
                         <img :src="r.image" class="recipe-img">
@@ -113,12 +106,9 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="filteredRecipes.length === 0" style="text-align:center; padding: 50px; color:#888;">
-                    Ничего не найдено 🌿
-                </div>
             </div>
 
-            <div v-if="page === 'recipe'" style="background:white; padding:30px; border-radius:15px;">
+            <div v-if="page === 'recipe' && currentRecipe" style="background:white; padding:30px; border-radius:15px; box-shadow: var(--shadow);">
                 <button class="btn btn-outline" @click="page = 'home'" style="margin-bottom:20px;">← Назад</button>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
                     <div>
@@ -135,7 +125,12 @@
                         </div>
                     </div>
                     <div>
-                        <img :src="currentRecipe.image" style="width:100%; border-radius:10px; box-shadow: var(--shadow);">
+                        <img :src="currentRecipe.image" style="width:100%; border-radius:10px; object-fit: cover;">
+                        
+                        <a v-if="currentRecipe.video" :href="currentRecipe.video" target="_blank" class="btn btn-video">
+                            🎬 Смотреть видео-инструкцию
+                        </a>
+
                         <h3 style="margin-top:20px;">Приготовление:</h3>
                         <p v-for="(s, idx) in currentRecipe.steps" style="margin-top:10px;"><b>{{ idx+1 }}.</b> {{ s }}</p>
                     </div>
@@ -145,16 +140,12 @@
     </div>
 
     <script src="recipes.js"></script>
-
     <script>
         const { createApp } = Vue
         createApp({
             data() {
                 return {
-                    page: 'home',
-                    search: '',
-                    activeCat: 'Все',
-                    showDayPicker: false,
+                    page: 'home', search: '', activeCat: 'Все', showDayPicker: false,
                     weekDays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
                     recipes: typeof myRecipes !== 'undefined' ? myRecipes : [],
                     currentRecipe: null,
@@ -162,18 +153,13 @@
                 }
             },
             computed: {
-                // Автоматически вытаскиваем все уникальные категории из твоего файла recipes.js
-                availableCategories() {
-                    const cats = this.recipes.map(r => r.category);
-                    return [...new Set(cats)];
-                },
-                // Фильтруем по поиску И по категории одновременно
+                availableCategories() { return [...new Set(this.recipes.map(r => r.category))]; },
                 filteredRecipes() {
                     const s = this.search.toLowerCase();
                     return this.recipes.filter(r => {
-                        const matchesSearch = r.title.toLowerCase().includes(s) || r.ingredients.some(i => i.toLowerCase().includes(s));
-                        const matchesCat = this.activeCat === 'Все' || r.category === this.activeCat;
-                        return matchesSearch && matchesCat;
+                        const mSearch = r.title.toLowerCase().includes(s) || r.ingredients.some(i => i.toLowerCase().includes(s));
+                        const mCat = this.activeCat === 'Все' || r.category === this.activeCat;
+                        return mSearch && mCat;
                     });
                 }
             },
@@ -190,15 +176,8 @@
                     localStorage.setItem('userPlan', JSON.stringify(this.plan));
                 },
                 sendToTelegram() {
-                    let text = "🌿 Мой план меню на неделю:\n\n";
-                    let hasItems = false;
-                    for (let day in this.plan) {
-                        if (this.plan[day].length > 0) {
-                            text += `${day}: ${this.plan[day].map(m => m.title).join(', ')}\n`;
-                            hasItems = true;
-                        }
-                    }
-                    if (!hasItems) return alert("Сначала добавьте блюда в план!");
+                    let text = "🌿 План меню:\n\n";
+                    for (let d in this.plan) if (this.plan[d].length > 0) text += `${d}: ${this.plan[d].map(m => m.title).join(', ')}\n`;
                     window.open(`https://t.me/share/url?url=${encodeURIComponent(text)}`, '_blank');
                 }
             }
