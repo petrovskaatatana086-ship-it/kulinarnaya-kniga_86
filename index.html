@@ -1,0 +1,99 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 ScandiKitchen | Моя Книга Рецептов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        :root {
+            --olive: #556b2f; --milk: #f4f1ea; --dark: #2c2c2c; --white: #ffffff;
+            --shadow: 0 4px 15px rgba(0,0,0,0.05); --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--milk); color: var(--dark); }
+        header { background: var(--white); padding: 1rem 5%; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 600; font-size: 1.5rem; color: var(--olive); cursor: pointer; }
+        .nav-controls { display: flex; gap: 15px; align-items: center; }
+        .btn { padding: 8px 18px; border-radius: 20px; border: none; cursor: pointer; transition: var(--transition); font-weight: 500; font-family: inherit; }
+        .btn-primary { background: var(--olive); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--olive); color: var(--olive); }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 20px; }
+        .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        .recipe-card { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: var(--transition); cursor: pointer; }
+        .recipe-card:hover { transform: translateY(-5px); }
+        .recipe-img { width: 100%; height: 200px; object-fit: cover; }
+        .recipe-info { padding: 15px; }
+        .category-tag { font-size: 0.75rem; color: var(--olive); text-transform: uppercase; font-weight: 600; }
+        .recipe-detail { background: white; padding: 30px; border-radius: 15px; }
+        @media (max-width: 768px) { .recipe-detail-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 10px; } }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="logo" @click="page = 'home'">🌿 ScandiKitchen</div>
+            <div class="nav-controls">
+                <button class="btn btn-outline" @click="page = 'home'">Каталог</button>
+                <button class="btn btn-primary" @click="sendToTelegram">✈ Список в TG</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <div v-if="page === 'home'">
+                <div class="recipe-grid">
+                    <div v-for="r in recipes" :key="r.id" class="recipe-card" @click="openRecipe(r)">
+                        <img :src="r.image" class="recipe-img">
+                        <div class="recipe-info">
+                            <span class="category-tag">{{ r.category }}</span>
+                            <h3 style="margin-top: 5px;">{{ r.title }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="page === 'recipe'" class="recipe-detail">
+                <button class="btn btn-outline" @click="page = 'home'" style="margin-bottom: 20px;">← Назад</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;" class="recipe-detail-grid">
+                    <div>
+                        <h1>{{ currentRecipe.title }}</h1>
+                        <p>{{ currentRecipe.time }} мин | {{ currentRecipe.kcal }} ккал</p>
+                        <div style="background: var(--milk); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <h3>Ингредиенты:</h3>
+                            <ul><li v-for="i in currentRecipe.ingredients">{{ i }}</li></ul>
+                        </div>
+                    </div>
+                    <div>
+                        <img :src="currentRecipe.image" style="width: 100%; border-radius: 10px;">
+                        <h3 style="margin-top: 20px;">Инструкция:</h3>
+                        <p v-for="(s, idx) in currentRecipe.steps" style="margin-bottom: 10px;"><b>{{ idx+1 }}.</b> {{ s }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="recipes.js"></script>
+
+    <script>
+        const { createApp } = Vue
+        createApp({
+            data() {
+                return {
+                    page: 'home',
+                    recipes: typeof myRecipes !== 'undefined' ? myRecipes : [],
+                    currentRecipe: null
+                }
+            },
+            methods: {
+                openRecipe(r) { this.currentRecipe = r; this.page = 'recipe'; },
+                sendToTelegram() {
+                    if (!this.currentRecipe) return alert('Сначала выберите рецепт!');
+                    const text = encodeURIComponent(`🌿 Рецепт: ${this.currentRecipe.title}\n\nИнгредиенты:\n${this.currentRecipe.ingredients.join('\n')}`);
+                    window.open(`https://t.me/share/url?url=${text}`, '_blank');
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
