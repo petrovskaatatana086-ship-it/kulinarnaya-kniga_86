@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -78,7 +77,9 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
                     <div v-for="recipe in filteredRecipes" :key="recipe.id" class="card" @click="openRecipe(recipe)" style="cursor:pointer">
                         <div class="recipe-photo-main">
+                            <!-- Сначала показываем пользовательское фото, затем встроенное из рецепта, затем эмодзи -->
                             <img v-if="userPhotos[recipe.id]" :src="userPhotos[recipe.id]">
+                            <img v-else-if="recipe.imageUrl" :src="recipe.imageUrl">
                             <div v-else style="font-size: 50px;">{{recipe.emoji}}</div>
                         </div>
                         <h3 style="margin:0;">{{recipe.title}}</h3>
@@ -91,7 +92,9 @@
                 <button @click="view = 'catalog'" class="btn btn-outline" style="margin-bottom:20px;">← К каталогу</button>
                 
                 <div class="recipe-photo-detail" @click="$refs.fileInput.click()">
+                    <!-- Приоритет: пользовательское фото, затем встроенное, затем надпись -->
                     <img v-if="userPhotos[currentRecipe.id]" :src="userPhotos[currentRecipe.id]">
+                    <img v-else-if="currentRecipe.imageUrl" :src="currentRecipe.imageUrl" style="cursor:pointer">
                     <span v-else>📷 Нажмите, чтобы добавить фото</span>
                     <input type="file" ref="fileInput" @change="uploadPhoto" style="display:none">
                 </div>
@@ -236,6 +239,7 @@
                     reader.readAsDataURL(e.target.files[0]);
                 },
                 saveToPlan(day) {
+                    // Клонируем рецепт без лишних полей, но с сохранением ingredients и т.д.
                     const newEntry = { ...JSON.parse(JSON.stringify(this.currentRecipe)), planId: Date.now(), day, servings: this.servings };
                     this.plan.push(newEntry); this.save(); this.showDayPicker = false;
                     alert(`Добавлено на ${day}`);
