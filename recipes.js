@@ -8,7 +8,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "маковые рулеты с творогом.jpg",
-        baseServings: 2,
+        baseServings: 8,
         ingredients: [
             { name: "Мука", amount: 700, unit: "г", category: "Бакалея" },
             { name: "Творог", amount: 380, unit: "г", category: "Молочные продукты" },
@@ -41,7 +41,7 @@ const initialRecipes = [
         mainCategory: "🥗 Салаты",
         videoUrl: "",
         imageUrl: "маринов. помидоры.jfif",
-        baseServings: 2,
+        baseServings: 1,
         ingredients: [
             { name: "Томаты", amount: 3, unit: "шт", category: "Овощи" },
             { name: "Красный сладкий лук", amount: 0.5, unit: "шт", category: "Овощи" },
@@ -58,7 +58,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "запеканка с шоколадом.jfif",
-        baseServings: 2,
+        baseServings: 10,
         ingredients: [
             { name: "Творог", amount: 500, unit: "г", category: "Молочные продукты" },
             { name: "Яйца", amount: 2, unit: "шт", category: "Молочные продукты" },
@@ -80,7 +80,7 @@ const initialRecipes = [
         mainCategory: "🍰 Десерты",
         videoUrl: "https://t.me/c/2285982651/11/381",
         imageUrl: "пастила.jfif",
-        baseServings: 2,
+        baseServings: 1,
         description: "Пышный воздушный и очень легкий десерт, буквально тает во рту.",
         ingredients: [
             { name: "Яблочное пюре", amount: 360, unit: "г", category: "Овощи и фрукты" },
@@ -102,7 +102,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "галета.jfif",
-        baseServings: 2,
+        baseServings: 1,
         description: "Приготовление занимает всего 10 минут активного времени, а КБЖУ на 100 г шикарный – 157/7,8/4,1/22,6.",
         ingredients: [
             { name: "Мука пшеничная", amount: 180, unit: "г", category: "Бакалея" },
