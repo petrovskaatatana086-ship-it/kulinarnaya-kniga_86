@@ -170,7 +170,7 @@ const initialRecipes = [
         calories: 210,
         mainCategory: "🥧 Выпечка",
         videoUrl: "https://t.me/c/2285982651/11/400",
-        imageUrl: "тыквенные вафли.jfif",
+        imageUrl: "images/tykvennye-vafli.jfif",
         baseServings: 2,
         ingredients: [
             { name: "Пшеничная мука", amount: 260, unit: "г", category: "Бакалея" },
@@ -343,13 +343,13 @@ const initialRecipes = [
     },
     {
         id: 16,
-        title: "Торт 'Анна Павлова' с малиной",
+        title: "торт Павлова",
         emoji: "🥧",
         time: 180,
         calories: 290,
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
-        imageUrl: "торт Павлова.jfif",
+        imageUrl: "images/tort-anna-pavlova.jfif",
         baseServings: 8,
         description: "Торт диаметром 24 см",
         ingredients: [
@@ -404,7 +404,7 @@ const initialRecipes = [
         calories: 280,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
-        imageUrl: "Куриное жаркое с овощами в сливочно-чесночном соусе.jpg",
+        imageUrl: "images/kurinoe-zharkoe-s-ovoshchami-v-slivochno-chesnochnom-souse.jpg",
         baseServings: 4,
         description: "Нежное куриное филе с картофелем, грибами и болгарским перцем в сливочно-сырном соусе. Можно менять овощи по сезону.",
         ingredients: [
@@ -431,7 +431,7 @@ const initialRecipes = [
         calories: 260,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
-        imageUrl: "куриные гнезда с ананасом.jpg",
+        imageUrl: "images/kurinye-gnezda-s-ananasom.jpg",
         baseServings: 4,
         description: "Сочные куриные гнёзда с творожным сыром, ананасом и сырной корочкой. Можно замораживать.",
         ingredients: [
@@ -457,7 +457,7 @@ const initialRecipes = [
         calories: 320,
         mainCategory: "🐟 Основные (рыба)",
         videoUrl: "",
-        imageUrl: "Лосось с начинкой из творожного сыра, шпината и черри.jpg",
+        imageUrl: "images/losos-s-nachinkoy-iz-tvorozhnogo-syra-shpinata-i-cherri.jpg",
         baseServings: 4,
         description: "Сочные стейки лосося, фаршированные сливочной начинкой со шпинатом и помидорами черри.",
         ingredients: [
@@ -480,7 +480,7 @@ const initialRecipes = [
         calories: 220,
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
-        imageUrl: "хашбраун.jpg",
+        imageUrl: "images/khashbraun.jpg",
         baseServings: 8,
         description: "Хрустящие картофельные оладьи с сыром и чесночным ароматом. Отлично подходят как завтрак или гарнир.",
         ingredients: [
@@ -501,7 +501,7 @@ const initialRecipes = [
         calories: 250,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
-        imageUrl: "котлеты классические.jpg",
+        imageUrl: "images/kotlety-klassicheskie.jpg",
         baseServings: 5,
         description: "Сочные куриные котлеты в хрустящей панировке. Можно замораживать и жарить без разморозки.",
         ingredients: [
@@ -550,7 +550,7 @@ const initialRecipes = [
         calories: 210,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
-        imageUrl: "Курица с овощами для азиатского вока.jpg",
+        imageUrl: "images/VOK.jpg",
         baseServings: 4,
         description: "Готовая смесь для быстрого приготовления в стиле азиатского вок: курица, овощи и ароматный соус.",
         ingredients: [
@@ -577,7 +577,7 @@ const initialRecipes = [
         calories: 250,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
-        imageUrl: "Болоньезе.tif",
+        imageUrl: "images/boloneze.tif",
         baseServings: 8,
         description: "Классический мясной соус болоньезе с овощами и томатами. Идеально для пасты или лазаньи. Замораживается порционно.",
         ingredients: [
@@ -606,7 +606,7 @@ const initialRecipes = [
         calories: 280,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
-        imageUrl: "Рулет Капрезе (творож. сыр, вялен.томаты).jpg",
+        imageUrl: "images/rulet-kapreze-tvorozhnyy-syr-vyalenye-tomaty.jpg",
         baseServings: 1,
         description: "Праздничный рулет из индейки с начинкой в стиле капрезе: песто, моцарелла, вяленые томаты, обёрнутый беконом.",
         ingredients: [
