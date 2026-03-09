@@ -4,7 +4,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ScandiKitchen Pro v3.5</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Подключаем файл с рецептами -->
+    <script src="recipes.js"></script>
     <style>
+        /* (стили остаются без изменений) */
         :root {
             --bg: #f4f1ea; --olive: #556b2f; --light: #d4e0c0; --white: #ffffff; --text: #2c3e50;
         }
@@ -167,3 +170,128 @@
 
     <script>
         const { createApp } = Vue;
+
+        // Предполагается, что массив initialRecipes загружен из recipes.js
+        // и доступен глобально. Если нет — раскомментируйте строку ниже и вставьте рецепты.
+        // const initialRecipes = [ ... ];
+
+        const app = createApp({
+            data() {
+                return {
+                    view: 'catalog', search: '', filterCat: '', currentRecipe: null, servings: 2, timeLeft: 0, timerInt: null,
+                    doneSteps: [], showDayPicker: false,
+                    mainCategories: ['🍜 Супы', '🥗 Салаты', '🥩 Основные (мясо)', '🐟 Основные (рыба)', '🥧 Выпечка', '🍰 Десерты'],
+                    weekDays: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
+                    plan: JSON.parse(localStorage.getItem('sk_plan_v34') || '[]'),
+                    stock: JSON.parse(localStorage.getItem('sk_stock_v34') || '{}'),
+                    stockCheck: JSON.parse(localStorage.getItem('sk_checks_v34') || '{}'),
+                    userPhotos: JSON.parse(localStorage.getItem('sk_photos_v34') || '{}')
+                }
+            },
+            computed: {
+                filteredRecipes() {
+                    // Используем глобальный массив initialRecipes
+                    return initialRecipes.filter(r => {
+                        const mS = r.title.toLowerCase().includes(this.search.toLowerCase()) || 
+                                   (r.ingredients && r.ingredients.some(i => i.name.toLowerCase().includes(this.search.toLowerCase())));
+                        const mC = !this.filterCat || r.mainCategory === this.filterCat;
+                        return mS && mC;
+                    });
+                },
+                formattedSteps() {
+                    if(!this.currentRecipe) return [];
+                    return this.currentRecipe.instructions.split('\n').map(l => {
+                        return l.replace(/(\d+)\s*(минут|мин)/gi, (m, p1) => `<span class="timer-tag" onclick="window.startGlobalTimer(${p1})">${m}</span>`);
+                    });
+                },
+                planByDay() {
+                    let map = {}; this.weekDays.forEach(d => map[d] = []);
+                    this.plan.forEach(p => { if(map[p.day]) map[p.day].push(p); });
+                    return map;
+                },
+                aggregatedList() {
+                    let total = {};
+                    this.plan.forEach(p => {
+                        if (!p.ingredients) return;
+                        p.ingredients.forEach(ing => {
+                            if(!total[ing.name]) total[ing.name] = { ...ing, amount: 0 };
+                            total[ing.name].amount += (ing.amount / (p.baseServings || 2) * p.servings);
+                        });
+                    });
+                    let grouped = {};
+                    for(let n in total) {
+                        const has = this.stock[n] || 0;
+                        const buy = Math.max(0, total[n].amount - has);
+                        if(buy > 0 && !this.stockCheck[n]) {
+                            const c = total[n].category || 'Разное';
+                            if(!grouped[c]) grouped[c] = [];
+                            grouped[c].push({ name: n, buy: buy.toFixed(0), unit: total[n].unit });
+                        }
+                    }
+                    return grouped;
+                }
+            },
+            methods: {
+                openRecipe(r) { this.currentRecipe = r; this.view = 'recipe'; this.servings = 2; this.doneSteps = []; window.scrollTo(0,0); },
+                toggleStep(i) { this.doneSteps.includes(i) ? this.doneSteps = this.doneSteps.filter(x => x !== i) : this.doneSteps.push(i); },
+                formatTime(s) { return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; },
+                uploadPhoto(e) {
+                    const reader = new FileReader();
+                    reader.onload = (f) => { this.userPhotos[this.currentRecipe.id] = f.target.result; this.save(); };
+                    reader.readAsDataURL(e.target.files[0]);
+                },
+                saveToPlan(day) {
+                    const newEntry = { ...JSON.parse(JSON.stringify(this.currentRecipe)), planId: Date.now(), day, servings: this.servings };
+                    this.plan.push(newEntry); this.save(); this.showDayPicker = false;
+                    alert(`Добавлено на ${day}`);
+                },
+                removeFromPlan(pid) { this.plan = this.plan.filter(p => p.planId !== pid); this.save(); },
+                clearPlan() { if(confirm("Очистить весь план?")) { this.plan = []; this.save(); } },
+                stopTimer() { this.timeLeft = 0; clearInterval(this.timerInt); },
+                exportToTelegram() {
+                    let txt = "🌿 МОЙ ПЛАН И ПОКУПКИ:\n";
+                    this.weekDays.forEach(d => {
+                        if(this.planByDay[d].length) txt += `\n📍 ${d.toUpperCase()}:\n` + this.planByDay[d].map(m => ` • ${m.title}`).join('\n') + '\n';
+                    });
+                    txt += "\n🛒 НУЖНО КУПИТЬ:\n";
+                    for(let c in this.aggregatedList) {
+                        txt += `\n🔹 ${c.toUpperCase()}:\n` + this.aggregatedList[c].map(i => ` - ${i.name}: ${i.buy} ${i.unit}`).join('\n') + '\n';
+                    }
+                    window.open(`https://t.me/share/url?url=${encodeURIComponent(txt)}`, '_blank');
+                },
+                playAlarm() {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const playNote = (time) => {
+                        const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(880, time);
+                        gain.gain.setValueAtTime(0.1, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
+                        osc.connect(gain); gain.connect(ctx.destination);
+                        osc.start(time); osc.stop(time + 0.5);
+                    };
+                    [0, 0.6, 1.2].forEach(t => playNote(ctx.currentTime + t));
+                },
+                save() {
+                    localStorage.setItem('sk_plan_v34', JSON.stringify(this.plan));
+                    localStorage.setItem('sk_stock_v34', JSON.stringify(this.stock));
+                    localStorage.setItem('sk_checks_v34', JSON.stringify(this.stockCheck));
+                    localStorage.setItem('sk_photos_v34', JSON.stringify(this.userPhotos));
+                }
+            },
+            watch: {
+                stock: { deep: true, handler() { this.save() } },
+                stockCheck: { deep: true, handler() { this.save() } }
+            }
+        });
+
+        const vm = app.mount('#app');
+        window.startGlobalTimer = (m) => {
+            vm.timeLeft = m * 60;
+            if(vm.timerInt) clearInterval(vm.timerInt);
+            vm.timerInt = setInterval(() => { 
+                if(vm.timeLeft > 0) vm.timeLeft--; 
+                else { clearInterval(vm.timerInt); vm.playAlarm(); alert("Таймер завершен!"); }
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
