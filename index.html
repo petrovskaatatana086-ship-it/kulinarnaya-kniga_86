@@ -2,9 +2,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ScandiKitchen Pro v3.4</title>
+    <title>ScandiKitchen Pro v3.5</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="recipes.js"></script>
     <style>
         :root {
             --bg: #f4f1ea; --olive: #556b2f; --light: #d4e0c0; --white: #ffffff; --text: #2c3e50;
@@ -12,33 +11,28 @@
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 60px; line-height: 1.5; }
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         
-        /* Header */
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .logo { font-size: 24px; font-weight: bold; color: var(--olive); cursor: pointer; }
         .nav-buttons { display: flex; gap: 10px; }
 
-        /* UI Elements */
         .card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); margin-bottom: 20px; overflow: hidden; }
         .btn { background: var(--olive); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
         .btn-outline { background: #e0e0e0; color: var(--text); }
         .btn-blue { background: #24A1DE; color: white; }
 
-        /* Filters */
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 25px; }
         .tab { padding: 12px; background: var(--white); border-radius: 15px; cursor: pointer; text-align: center; font-size: 13px; border: 2px solid transparent; }
         .tab.active { background: var(--olive); color: white; font-weight: bold; }
 
         .search-input { width: 100%; padding: 18px; border-radius: 15px; border: none; box-shadow: 0 8px 24px rgba(0,0,0,0.05); font-size: 16px; margin-bottom: 20px; box-sizing: border-box; outline: none; }
 
-        /* Photos */
         .recipe-photo-main { width: 100%; height: 200px; background: #e0e0e0; margin: -20px -20px 15px -20px; width: calc(100% + 40px); overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .recipe-photo-main img { width: 100%; height: 100%; object-fit: cover; }
         
         .recipe-photo-detail { width: 100%; height: 350px; border-radius: 20px; overflow: hidden; margin-bottom: 20px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .recipe-photo-detail img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Recipe Content */
         .instr-step { white-space: pre-wrap; padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
         .instr-step:hover { background: #f9f9f7; }
         .instr-step.done { opacity: 0.4; text-decoration: line-through; }
@@ -46,7 +40,6 @@
 
         .ing-row { display: grid; grid-template-columns: 1fr 80px 40px; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
 
-        /* Timer Widget */
         .timer-widget { position: fixed; bottom: 20px; right: 20px; background: var(--olive); color: white; padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; display: flex; align-items: center; gap: 15px; font-weight: bold; }
         
         [v-cloak] { display: none; }
@@ -77,7 +70,6 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
                     <div v-for="recipe in filteredRecipes" :key="recipe.id" class="card" @click="openRecipe(recipe)" style="cursor:pointer">
                         <div class="recipe-photo-main">
-                            <!-- Сначала показываем пользовательское фото, затем встроенное из рецепта, затем эмодзи -->
                             <img v-if="userPhotos[recipe.id]" :src="userPhotos[recipe.id]">
                             <img v-else-if="recipe.imageUrl" :src="recipe.imageUrl">
                             <div v-else style="font-size: 50px;">{{recipe.emoji}}</div>
@@ -92,7 +84,6 @@
                 <button @click="view = 'catalog'" class="btn btn-outline" style="margin-bottom:20px;">← К каталогу</button>
                 
                 <div class="recipe-photo-detail" @click="$refs.fileInput.click()">
-                    <!-- Приоритет: пользовательское фото, затем встроенное, затем надпись -->
                     <img v-if="userPhotos[currentRecipe.id]" :src="userPhotos[currentRecipe.id]">
                     <img v-else-if="currentRecipe.imageUrl" :src="currentRecipe.imageUrl" style="cursor:pointer">
                     <span v-else>📷 Нажмите, чтобы добавить фото</span>
@@ -112,7 +103,7 @@
                     </div>
                     <div v-for="(ing, idx) in currentRecipe.ingredients" :key="idx" class="ing-row">
                         <span :style="{textDecoration: stockCheck[ing.name] ? 'line-through' : 'none', opacity: stockCheck[ing.name] ? 0.5 : 1}">
-                            {{ing.name}}: <b>{{ (ing.amount / 2 * servings).toFixed(0) }} {{ing.unit}}</b>
+                            {{ing.name}}: <b>{{ (ing.amount / (currentRecipe.baseServings || 2) * servings).toFixed(0) }} {{ing.unit}}</b>
                         </span>
                         <input type="number" v-model.number="stock[ing.name]" placeholder="0" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd;">
                         <input type="checkbox" v-model="stockCheck[ing.name]" style="width:22px; height:22px;">
@@ -174,123 +165,5 @@
         </div>
     </div>
 
-    <script>
+  <script>
         const { createApp } = Vue;
-        const app = createApp({
-            data() {
-                return {
-                    view: 'catalog', search: '', filterCat: '', currentRecipe: null, servings: 2, timeLeft: 0, timerInt: null,
-                    doneSteps: [], showDayPicker: false,
-                    mainCategories: ['🍜 Супы', '🥗 Салаты', '🥩 Основные (мясо)', '🐟 Основные (рыба)', '🥧 Выпечка', '🍰 Десерты'],
-                    weekDays: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
-                    plan: JSON.parse(localStorage.getItem('sk_plan_v34') || '[]'),
-                    stock: JSON.parse(localStorage.getItem('sk_stock_v34') || '{}'),
-                    stockCheck: JSON.parse(localStorage.getItem('sk_checks_v34') || '{}'),
-                    userPhotos: JSON.parse(localStorage.getItem('sk_photos_v34') || '{}')
-                }
-            },
-            computed: {
-                filteredRecipes() {
-                    return initialRecipes.filter(r => {
-                        const mS = r.title.toLowerCase().includes(this.search.toLowerCase()) || r.ingredients.some(i => i.name.toLowerCase().includes(this.search.toLowerCase()));
-                        const mC = !this.filterCat || r.mainCategory === this.filterCat;
-                        return mS && mC;
-                    });
-                },
-                formattedSteps() {
-                    if(!this.currentRecipe) return [];
-                    return this.currentRecipe.instructions.split('\n').map(l => {
-                        return l.replace(/(\d+)\s*(минут|мин)/gi, (m, p1) => `<span class="timer-tag" onclick="window.startGlobalTimer(${p1})">${m}</span>`);
-                    });
-                },
-                planByDay() {
-                    let map = {}; this.weekDays.forEach(d => map[d] = []);
-                    this.plan.forEach(p => { if(map[p.day]) map[p.day].push(p); });
-                    return map;
-                },
-                aggregatedList() {
-                    let total = {};
-                    this.plan.forEach(p => {
-                        p.ingredients.forEach(ing => {
-                            if(!total[ing.name]) total[ing.name] = { ...ing, amount: 0 };
-                            total[ing.name].amount += (ing.amount / 2 * p.servings);
-                        });
-                    });
-                    let grouped = {};
-                    for(let n in total) {
-                        const has = this.stock[n] || 0;
-                        const buy = Math.max(0, total[n].amount - has);
-                        if(buy > 0 && !this.stockCheck[n]) {
-                            const c = total[n].category || 'Разное';
-                            if(!grouped[c]) grouped[c] = [];
-                            grouped[c].push({ name: n, buy: buy.toFixed(0), unit: total[n].unit });
-                        }
-                    }
-                    return grouped;
-                }
-            },
-            methods: {
-                openRecipe(r) { this.currentRecipe = r; this.view = 'recipe'; this.servings = 2; this.doneSteps = []; window.scrollTo(0,0); },
-                toggleStep(i) { this.doneSteps.includes(i) ? this.doneSteps = this.doneSteps.filter(x => x !== i) : this.doneSteps.push(i); },
-                formatTime(s) { return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; },
-                uploadPhoto(e) {
-                    const reader = new FileReader();
-                    reader.onload = (f) => { this.userPhotos[this.currentRecipe.id] = f.target.result; this.save(); };
-                    reader.readAsDataURL(e.target.files[0]);
-                },
-                saveToPlan(day) {
-                    // Клонируем рецепт без лишних полей, но с сохранением ingredients и т.д.
-                    const newEntry = { ...JSON.parse(JSON.stringify(this.currentRecipe)), planId: Date.now(), day, servings: this.servings };
-                    this.plan.push(newEntry); this.save(); this.showDayPicker = false;
-                    alert(`Добавлено на ${day}`);
-                },
-                removeFromPlan(pid) { this.plan = this.plan.filter(p => p.planId !== pid); this.save(); },
-                clearPlan() { if(confirm("Очистить весь план?")) { this.plan = []; this.save(); } },
-                stopTimer() { this.timeLeft = 0; clearInterval(this.timerInt); },
-                exportToTelegram() {
-                    let txt = "🌿 МОЙ ПЛАН И ПОКУПКИ:\n";
-                    this.weekDays.forEach(d => {
-                        if(this.planByDay[d].length) txt += `\n📍 ${d.toUpperCase()}:\n` + this.planByDay[d].map(m => ` • ${m.title}`).join('\n') + '\n';
-                    });
-                    txt += "\n🛒 НУЖНО КУПИТЬ:\n";
-                    for(let c in this.aggregatedList) {
-                        txt += `\n🔹 ${c.toUpperCase()}:\n` + this.aggregatedList[c].map(i => ` - ${i.name}: ${i.buy} ${i.unit}`).join('\n') + '\n';
-                    }
-                    window.open(`https://t.me/share/url?url=${encodeURIComponent(txt)}`, '_blank');
-                },
-                playAlarm() {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const playNote = (time) => {
-                        const osc = ctx.createOscillator(); const gain = ctx.createGain();
-                        osc.type = 'sine'; osc.frequency.setValueAtTime(880, time);
-                        gain.gain.setValueAtTime(0.1, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
-                        osc.connect(gain); gain.connect(ctx.destination);
-                        osc.start(time); osc.stop(time + 0.5);
-                    };
-                    [0, 0.6, 1.2].forEach(t => playNote(ctx.currentTime + t));
-                },
-                save() {
-                    localStorage.setItem('sk_plan_v34', JSON.stringify(this.plan));
-                    localStorage.setItem('sk_stock_v34', JSON.stringify(this.stock));
-                    localStorage.setItem('sk_checks_v34', JSON.stringify(this.stockCheck));
-                    localStorage.setItem('sk_photos_v34', JSON.stringify(this.userPhotos));
-                }
-            },
-            watch: {
-                stock: { deep: true, handler() { this.save() } },
-                stockCheck: { deep: true, handler() { this.save() } }
-            }
-        });
-
-        const vm = app.mount('#app');
-        window.startGlobalTimer = (m) => {
-            vm.timeLeft = m * 60;
-            if(vm.timerInt) clearInterval(vm.timerInt);
-            vm.timerInt = setInterval(() => { 
-                if(vm.timeLeft > 0) vm.timeLeft--; 
-                else { clearInterval(vm.timerInt); vm.playAlarm(); alert("Таймер завершен!"); }
-            }, 1000);
-        };
-    </script>
-</body>
-</html>
