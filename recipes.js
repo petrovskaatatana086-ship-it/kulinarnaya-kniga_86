@@ -526,7 +526,7 @@ const initialRecipes = [
         calories: 250,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
-        imageUrl: "Болоньезе.jpg",
+        imageUrl: "Болоньезе.tif",
         description: "Классический мясной соус болоньезе с овощами и томатами. Идеально для пасты или лазаньи. Замораживается порционно.",
         ingredients: [
             { name: "Фарш мясной (говядина/свинина)", amount: 500, unit: "г", category: "Мясо/рыба" },
