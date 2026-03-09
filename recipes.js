@@ -7,7 +7,8 @@ const initialRecipes = [
         calories: 450,
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
-        imageUrl: "маковые рулеты с творогом.jpg", 
+        imageUrl: "маковые рулеты с творогом.jpg",
+        baseServings: 2,
         ingredients: [
             { name: "Мука", amount: 700, unit: "г", category: "Бакалея" },
             { name: "Творог", amount: 380, unit: "г", category: "Молочные продукты" },
@@ -23,7 +24,8 @@ const initialRecipes = [
         calories: 350,
         mainCategory: "🐟 Основные (рыба, морепродукты)",
         videoUrl: "",
-        imageUrl: "стейк из лосося.webp", 
+        imageUrl: "стейк из лосося.webp",
+        baseServings: 2,
         ingredients: [
             { name: "Лосось", amount: 200, unit: "г", category: "Мясо/рыба" },
             { name: "Лимон", amount: 0.5, unit: "шт.", category: "Овощи и фрукты" }
@@ -39,6 +41,7 @@ const initialRecipes = [
         mainCategory: "🥗 Салаты",
         videoUrl: "",
         imageUrl: "маринов. помидоры.jfif",
+        baseServings: 2,
         ingredients: [
             { name: "Томаты", amount: 3, unit: "шт", category: "Овощи" },
             { name: "Красный сладкий лук", amount: 0.5, unit: "шт", category: "Овощи" },
@@ -55,6 +58,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "запеканка с шоколадом.jfif",
+        baseServings: 2,
         ingredients: [
             { name: "Творог", amount: 500, unit: "г", category: "Молочные продукты" },
             { name: "Яйца", amount: 2, unit: "шт", category: "Молочные продукты" },
@@ -76,6 +80,7 @@ const initialRecipes = [
         mainCategory: "🍰 Десерты",
         videoUrl: "https://t.me/c/2285982651/11/381",
         imageUrl: "пастила.jfif",
+        baseServings: 2,
         description: "Пышный воздушный и очень легкий десерт, буквально тает во рту.",
         ingredients: [
             { name: "Яблочное пюре", amount: 360, unit: "г", category: "Овощи и фрукты" },
@@ -97,6 +102,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "галета.jfif",
+        baseServings: 2,
         description: "Приготовление занимает всего 10 минут активного времени, а КБЖУ на 100 г шикарный – 157/7,8/4,1/22,6.",
         ingredients: [
             { name: "Мука пшеничная", amount: 180, unit: "г", category: "Бакалея" },
@@ -123,9 +129,10 @@ const initialRecipes = [
         emoji: "🥣",
         time: 50,
         calories: 420,
-        mainCategory: "🍰 Десерты",
+        mainCategory: "🥣 Завтраки", // исправлено с Десерты на Завтраки
         videoUrl: "https://t.me/c/2285982651/11/435",
         imageUrl: "гранола.jfif",
+        baseServings: 2,
         description: "Хрустящая гранола",
         ingredients: [
             { name: "Овсяные хлопья", amount: 1000, unit: "г", category: "Бакалея" },
@@ -133,7 +140,7 @@ const initialRecipes = [
             { name: "Мед (или сироп топинамбура)", amount: 200, unit: "г", category: "Бакалея" },
             { name: "Оливковое масло", amount: 50, unit: "мл", category: "Бакалея" }
         ],
-         instructions: "1. Овсяные хлопья смешать с медом/сиропом, соком и оливковым маслом.\n\n2. Выложить массу на противень, застеленный пергаментом, и отправить выпекаться в разогретую до 160 градусов духовку на 40 минут (до хрустящего состояния). В процессе выпечки перемешать гранолу 2–3 раза, чтобы она равномерно зарумянилась.\n\n3. Остудить гранолу, добавить наполнение по вкусу и перемешать."
+        instructions: "1. Овсяные хлопья смешать с медом/сиропом, соком и оливковым маслом.\n\n2. Выложить массу на противень, застеленный пергаментом, и отправить выпекаться в разогретую до 160 градусов духовку на 40 минут (до хрустящего состояния). В процессе выпечки перемешать гранолу 2–3 раза, чтобы она равномерно зарумянилась.\n\n3. Остудить гранолу, добавить наполнение по вкусу и перемешать."
     },
     {
         id: 8,
@@ -144,6 +151,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "https://t.me/c/2285982651/11/405",
         imageUrl: "",
+        baseServings: 2,
         ingredients: [
             { name: "Слоеное бездрожжевое тесто", amount: 500, unit: "г", category: "Бакалея" },
             { name: "Груша", amount: 1, unit: "шт", category: "Овощи и фрукты" },
@@ -163,6 +171,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "https://t.me/c/2285982651/11/400",
         imageUrl: "тыквенные вафли.jfif",
+        baseServings: 2,
         ingredients: [
             { name: "Пшеничная мука", amount: 260, unit: "г", category: "Бакалея" },
             { name: "Тыква запеченная", amount: 250, unit: "г", category: "Овощи и фрукты" },
@@ -187,6 +196,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "https://t.me/c/2285982651/11/373",
         imageUrl: "",
+        baseServings: 2,
         ingredients: [
             { name: "Мука пшеничная", amount: 150, unit: "г", category: "Бакалея" },
             { name: "Миндальная мука", amount: 30, unit: "г", category: "Бакалея" },
@@ -211,6 +221,7 @@ const initialRecipes = [
         mainCategory: "🍰 Десерты",
         videoUrl: "",
         imageUrl: "семифредо.jfif",
+        baseServings: 2,
         ingredients: [
             { name: "Сливки 33%", amount: 400, unit: "мл", category: "Молочные продукты" },
             { name: "Маскарпоне", amount: 500, unit: "г", category: "Молочные продукты" },
@@ -233,6 +244,7 @@ const initialRecipes = [
         mainCategory: "🍰 Десерты",
         videoUrl: "https://t.me/c/2285982651/11/305",
         imageUrl: "Трайфл с кремом пломбир и бананами.jfif",
+        baseServings: 2,
         description: "На 5 стаканов по 200 мл и 2 формы по 550 мл",
         ingredients: [
             { name: "Яйца (для бисквита)", amount: 1, unit: "шт", category: "Молочные продукты" },
@@ -244,7 +256,7 @@ const initialRecipes = [
             { name: "Сода", amount: 0.5, unit: "ч.л.", category: "Бакалея" },
             { name: "Разрыхлитель", amount: 1, unit: "ч.л.", category: "Бакалея" },
             { name: "Кипяток", amount: 100, unit: "мл", category: "Напитки" },
-            { name: "Соль", amount: 1, unit: "щепотка", category: "Специи" }
+            { name: "Соль", amount: 1, unit: "щепотка", category: "Специи" },
             { name: "Молоко (для крема)", amount: 500, unit: "мл", category: "Молочные продукты" },
             { name: "Сахар (для крема)", amount: 150, unit: "г", category: "Бакалея" },
             { name: "Яйца (для крема)", amount: 2, unit: "шт", category: "Молочные продукты" },
@@ -253,9 +265,9 @@ const initialRecipes = [
             { name: "Ванильный сахар", amount: 10, unit: "г", category: "Специи" },
             { name: "Сливочное масло 82%", amount: 50, unit: "г", category: "Молочные продукты" },
             { name: "Сливки 33-35%", amount: 200, unit: "г", category: "Молочные продукты" },
-            { name: "Бананы", amount: 2, unit: "шт", category: "Овощи и фрукты" }
+            { name: "Бананы", amount: 2, unit: "шт", category: "Овощи и фрукты" },
             { name: "Шоколад (темный + молочный)", amount: 150, unit: "г", category: "Бакалея" },
-            { name: "Сливки 33-35%", amount: 150, unit: "г", category: "Молочные продукты" }
+            { name: "Сливки 33-35% (для глазури)", amount: 150, unit: "г", category: "Молочные продукты" }
         ],
         instructions: "1. Бисквит: смешать все сухие ингредиенты. Добавить яйцо, молоко, масло, перемешать. Влить кипяток, быстро перемешать. Выпекать 20-25 минут при 180°С.\n\n2. Крем: молоко нагреть. Яйца взбить с сахаром, мукой и крахмалом. Влить горячее молоко, вернуть на огонь, варить до загустения. Добавить масло, накрыть пленкой, остудить. Взбить сливки, соединить с заварной основой.\n\n3. Глазурь: нагреть сливки, залить шоколад, перемешать до однородности.\n\n4. Собрать трайфлы: бисквит, крем, бананы, повторить, залить глазурью."
     },
@@ -268,6 +280,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "шоколадный фондант.jfif",
+        baseServings: 2,
         description: "С жидкой сердцевиной. Подходит для заморозки",
         ingredients: [
             { name: "Шоколад темный", amount: 100, unit: "г", category: "Бакалея" },
@@ -288,6 +301,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "лимонный пирог.jpg",
+        baseServings: 2,
         ingredients: [
             { name: "Мука", amount: 300, unit: "г", category: "Бакалея" },
             { name: "Сливочное масло", amount: 160, unit: "г", category: "Молочные продукты" },
@@ -309,6 +323,7 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "https://t.me/c/2285982651/11/167",
         imageUrl: "апельсиновый кекс.jpg",
+        baseServings: 2,
         description: "Форма 20*11 см или объёмом 1 л",
         ingredients: [
             { name: "Сливочное масло", amount: 100, unit: "г", category: "Молочные продукты" },
@@ -335,32 +350,62 @@ const initialRecipes = [
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "торт Павлова.jfif",
+        baseServings: 8,
         description: "Торт диаметром 24 см",
         ingredients: [
             { name: "Белки яичные", amount: 200, unit: "г", category: "Молочные продукты" },
             { name: "Сахар (для коржа)", amount: 400, unit: "г", category: "Бакалея" },
             { name: "Соль", amount: 1, unit: "щепотка", category: "Специи" },
-            { name: "Ванильный экстракт", amount: 1, unit: "по вкусу", category: "Специи" }
+            { name: "Ванильный экстракт", amount: 1, unit: "по вкусу", category: "Специи" },
             { name: "Малиновое пюре", amount: 200, unit: "г", category: "Ягоды" },
             { name: "Сок лайма", amount: 20, unit: "г", category: "Овощи и фрукты" },
             { name: "Сахар (для конфитюра)", amount: 40, unit: "г", category: "Бакалея" },
             { name: "Кукурузный крахмал", amount: 10, unit: "г", category: "Бакалея" },
-            { name: "Малина замороженная", amount: 200, unit: "г", category: "Ягоды" }
+            { name: "Малина замороженная", amount: 200, unit: "г", category: "Ягоды" },
             { name: "Маскарпоне", amount: 500, unit: "г", category: "Молочные продукты" },
             { name: "Сахарная пудра", amount: 100, unit: "г", category: "Бакалея" },
             { name: "Сливки 33%", amount: 250, unit: "г", category: "Молочные продукты" }
         ],
         instructions: "1. Корж: белки взбить с солью до пышной пены, продолжая взбивать, добавлять сахар. Взбить до устойчивых пиков. Выложить на противень с пергаментом, сформировать круг с углублением в центре. Выпекать при 100°C 2-2,5 часа.\n\n2. Конфитюр: малиновое пюре с соком лайма довести до кипения, добавить крахмал, смешанный с сахаром, проварить 2 минуты до загустения. Добавить малину, перемешать, остудить.\n\n3. Крем: маскарпоне взбить с сахарной пудрой, добавить холодные сливки, взбить до пышности.\n\n4. Сборка: на корж выложить немного крема, затем конфитюр, закрыть оставшимся кремом. Украсить ягодами. Дать настояться 1-2 часа в холодильнике."
     },
-   {
+    {
+        id: 17,
+        title: "Гнёзда с сырно-томатной начинкой",
+        emoji: "🥩",
+        time: 60,
+        calories: 280,
+        mainCategory: "🥩 Основные (мясо)",
+        videoUrl: "",
+        imageUrl: "",
+        baseServings: 4,
+        description: "Сочные мясные гнёзда с ароматной начинкой из творожного сыра и помидоров. Можно замораживать и запекать без разморозки.",
+        ingredients: [
+            { name: "Фарш (говяжий или смешанный)", amount: 800, unit: "г", category: "Мясо/рыба" },
+            { name: "Репчатый лук", amount: 0.5, unit: "шт", category: "Овощи" },
+            { name: "Яйцо", amount: 1, unit: "шт", category: "Молочные продукты" },
+            { name: "Панировочные сухари", amount: 2, unit: "ст.л.", category: "Бакалея" },
+            { name: "Молоко (или сливки)", amount: 2, unit: "ст.л.", category: "Молочные продукты" },
+            { name: "Соль", amount: 1, unit: "по вкусу", category: "Специи" },
+            { name: "Перец", amount: 1, unit: "по вкусу", category: "Специи" },
+            { name: "Сушёный чеснок", amount: 0.5, unit: "ч.л.", category: "Специи" },
+            { name: "Зелень (петрушка, укроп)", amount: 10, unit: "г", category: "Овощи" },
+            { name: "Творожный сыр", amount: 100, unit: "г", category: "Молочные продукты" },
+            { name: "Помидор", amount: 1, unit: "шт", category: "Овощи" },
+            { name: "Твёрдый сыр", amount: 100, unit: "г", category: "Молочные продукты" },
+            { name: "Зелень для начинки (базилик или петрушка)", amount: 5, unit: "г", category: "Овощи" }
+        ],
+        instructions: "1. Соединить фарш, мелко нарезанный лук, яйцо, панировочные сухари, молоко, соль, перец, сушёный чеснок и зелень. Тщательно вымесить. Дать постоять 10 минут.\n\n2. Для начинки смешать творожный сыр, тёртый твёрдый сыр, мелко нарезанный помидор и зелень.\n\n3. Из фарша сформировать лепёшки (примерно по 100 г), сделать в центре углубление, не доходя до дна. Выложить на противень с пергаментом. В каждое углубление положить по 1 ст. ложке начинки с горкой.\n\n4. Сверху посыпать тёртым твёрдым сыром.\n\n5. Выпекать в разогретой до 190°C духовке: сначала 25 минут под фольгой, затем снять фольгу и запекать ещё 10-12 минут до румяной корочки.\n\nЛайфхак: гнёзда можно заморозить и запекать без разморозки."
+    },
+    {
         id: 18,
-        title: "Куриное жаркое с овощами в сливочно-чесночном соусе 4 порц.",
+        title: "Куриное жаркое с овощами в сливочно-чесночном соусе",
         emoji: "🍗",
         time: 60,
         calories: 280,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
         imageUrl: "Куриное жаркое с овощами в сливочно-чесночном соусе.jpg",
+        baseServings: 4,
         description: "Нежное куриное филе с картофелем, грибами и болгарским перцем в сливочно-сырном соусе. Можно менять овощи по сезону.",
         ingredients: [
             { name: "Куриное филе", amount: 500, unit: "г", category: "Мясо/рыба" },
@@ -380,13 +425,14 @@ const initialRecipes = [
     },
     {
         id: 19,
-        title: "Куриные гнёзда из фарша с ананасом 4 порц",
+        title: "Куриные гнёзда из фарша с ананасом",
         emoji: "🍍",
         time: 45,
         calories: 260,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
         imageUrl: "куриные гнезда с ананасом.jpg",
+        baseServings: 4,
         description: "Сочные куриные гнёзда с творожным сыром, ананасом и сырной корочкой. Можно замораживать.",
         ingredients: [
             { name: "Куриный фарш", amount: 400, unit: "г", category: "Мясо/рыба" },
@@ -405,13 +451,14 @@ const initialRecipes = [
     },
     {
         id: 20,
-        title: "Лосось с начинкой из творожного сыра, шпината и черри 4 порц.",
+        title: "Лосось с начинкой из творожного сыра, шпината и черри",
         emoji: "🐟",
         time: 35,
         calories: 320,
         mainCategory: "🐟 Основные (рыба)",
         videoUrl: "",
         imageUrl: "Лосось с начинкой из творожного сыра, шпината и черри.jpg",
+        baseServings: 4,
         description: "Сочные стейки лосося, фаршированные сливочной начинкой со шпинатом и помидорами черри.",
         ingredients: [
             { name: "Стейк лосося", amount: 4, unit: "куска по 130–180 г", category: "Мясо/рыба" },
@@ -427,13 +474,14 @@ const initialRecipes = [
     },
     {
         id: 21,
-        title: "Хашбрауны с сыром 8 порц.",
+        title: "Хашбрауны с сыром",
         emoji: "🥔",
         time: 30,
         calories: 220,
         mainCategory: "🥧 Выпечка",
         videoUrl: "",
         imageUrl: "хашбраун.jpg",
+        baseServings: 8,
         description: "Хрустящие картофельные оладьи с сыром и чесночным ароматом. Отлично подходят как завтрак или гарнир.",
         ingredients: [
             { name: "Картофель", amount: 800, unit: "г", category: "Овощи" },
@@ -447,13 +495,14 @@ const initialRecipes = [
     },
     {
         id: 22,
-        title: "Куриные котлеты в панировке, классические 5 порц.",
+        title: "Куриные котлеты в панировке, классические",
         emoji: "🍗",
         time: 40,
         calories: 250,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
         imageUrl: "котлеты классические.jpg",
+        baseServings: 5,
         description: "Сочные куриные котлеты в хрустящей панировке. Можно замораживать и жарить без разморозки.",
         ingredients: [
             { name: "Куриный фарш", amount: 600, unit: "г", category: "Мясо/рыба" },
@@ -469,13 +518,14 @@ const initialRecipes = [
     },
     {
         id: 23,
-        title: "Куриные рулетики в беконе с начинкой 6 порц.",
+        title: "Куриные рулетики в беконе с начинкой",
         emoji: "🥓",
         time: 55,
         calories: 330,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
         imageUrl: "",
+        baseServings: 6,
         description: "Нежные куриные рулетики с овощной начинкой, обёрнутые беконом. Идеально для праздничного стола.",
         ingredients: [
             { name: "Куриное филе", amount: 500, unit: "г", category: "Мясо/рыба" },
@@ -494,13 +544,14 @@ const initialRecipes = [
     },
     {
         id: 24,
-        title: "Курица с овощами для азиатского вок 4 порц",
+        title: "Курица с овощами для азиатского вок",
         emoji: "🥢",
         time: 30,
         calories: 210,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
         imageUrl: "Курица с овощами для азиатского вока.jpg",
+        baseServings: 4,
         description: "Готовая смесь для быстрого приготовления в стиле азиатского вок: курица, овощи и ароматный соус.",
         ingredients: [
             { name: "Куриное филе бедра", amount: 500, unit: "г", category: "Мясо/рыба" },
@@ -520,13 +571,14 @@ const initialRecipes = [
     },
     {
         id: 25,
-        title: "Болоньезе (заморозка) 8 порц.",
+        title: "Болоньезе (заморозка)",
         emoji: "🍝",
         time: 55,
         calories: 250,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
         imageUrl: "Болоньезе.tif",
+        baseServings: 8,
         description: "Классический мясной соус болоньезе с овощами и томатами. Идеально для пасты или лазаньи. Замораживается порционно.",
         ingredients: [
             { name: "Фарш мясной (говядина/свинина)", amount: 500, unit: "г", category: "Мясо/рыба" },
@@ -548,13 +600,14 @@ const initialRecipes = [
     },
     {
         id: 26,
-        title: "Рулет из индейки 'Капрезе' 1 порц.",
+        title: "Рулет из индейки 'Капрезе'",
         emoji: "🦃",
         time: 85,
         calories: 280,
         mainCategory: "🥩 Основные (мясо)",
         videoUrl: "",
         imageUrl: "Рулет Капрезе (творож. сыр, вялен.томаты).jpg",
+        baseServings: 1,
         description: "Праздничный рулет из индейки с начинкой в стиле капрезе: песто, моцарелла, вяленые томаты, обёрнутый беконом.",
         ingredients: [
             { name: "Филе бедра (грудки) индейки", amount: 900, unit: "г", category: "Мясо/рыба" },
