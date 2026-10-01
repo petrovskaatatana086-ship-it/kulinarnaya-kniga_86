@@ -7,6 +7,7 @@
     <!-- Подключаем файл с рецептами -->
     <script src="recipes.js"></script>
     <script src="recipes-soups.js"></script>
+    <script src="recipes-baking.js"></script>
     <style>
         /* (стили остаются без изменений) */
         :root {
@@ -24,6 +25,7 @@
         .btn:active { transform: scale(0.98); }
         .btn-outline { background: #e0e0e0; color: var(--text); }
         .btn-blue { background: #24A1DE; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
 
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 25px; }
         .tab { padding: 12px; background: var(--white); border-radius: 15px; cursor: pointer; text-align: center; font-size: 13px; border: 2px solid transparent; }
@@ -43,6 +45,10 @@
         .timer-tag { color: var(--olive); font-weight: bold; text-decoration: underline; cursor: pointer; padding: 2px 6px; background: var(--light); border-radius: 6px; }
 
         .ing-row { display: grid; grid-template-columns: 1fr 80px 40px; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .form-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: bold; color: var(--olive); }
+        .form-field input, .form-field textarea, .form-field select { width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 10px; padding: 12px; font: inherit; color: var(--text); background: #fff; }
+        .form-field textarea { min-height: 140px; resize: vertical; line-height: 1.4; font-weight: normal; }
 
         .timer-widget { position: fixed; bottom: 20px; right: 20px; background: var(--olive); color: white; padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; display: flex; align-items: center; gap: 15px; font-weight: bold; }
         
@@ -60,6 +66,7 @@
             <header>
                 <div class="logo" @click="view = 'catalog'">🌿 ScandiKitchen</div>
                 <div class="nav-buttons">
+                    <button class="btn btn-outline" @click="startNewRecipe">＋ РЕЦЕПТ</button>
                     <button class="btn" @click="view = 'planner'">📅 ПЛАН</button>
                     <button class="btn btn-outline" @click="view = 'shopping'">🛒 ПОКУПКИ</button>
                 </div>
@@ -87,7 +94,10 @@
             </main>
 
             <main v-if="view === 'recipe'">
-                <button @click="view = 'catalog'" class="btn btn-outline" style="margin-bottom:20px;">← К каталогу</button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                    <button @click="view = 'catalog'" class="btn btn-outline">← К каталогу</button>
+                    <button @click="startEditRecipe(currentRecipe)" class="btn">✎ Редактировать</button>
+                </div>
                 
                 <div class="recipe-photo-detail" @click="$refs.fileInput.click()">
                     <img v-if="userPhotos[currentRecipe.id]" :src="userPhotos[currentRecipe.id]">
@@ -97,6 +107,7 @@
                 </div>
 
                 <h1>{{currentRecipe.emoji}} {{currentRecipe.title}}</h1>
+                <p v-if="currentRecipe.description" style="opacity:0.7; margin-top:-10px;">{{currentRecipe.description}}</p>
 
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -126,6 +137,77 @@
                 <div style="display:flex; gap:12px;">
                     <button class="btn" style="flex:2;" @click="showDayPicker = true">📅 ДОБАВИТЬ В ПЛАН</button>
                     <a v-if="currentRecipe.videoUrl" :href="currentRecipe.videoUrl" target="_blank" class="btn btn-blue" style="flex:1; text-align:center;">📺 ВИДЕО</a>
+                </div>
+            </main>
+
+            <main v-if="view === 'edit'">
+                <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
+                    <h1 style="margin:0;">{{editingRecipe.id ? 'Редактирование рецепта' : 'Новый рецепт'}}</h1>
+                    <button class="btn btn-outline" @click="cancelRecipeEdit">← Отмена</button>
+                </div>
+
+                <div class="card">
+                    <div class="form-grid">
+                        <label class="form-field">
+                            Название
+                            <input v-model.trim="editingRecipe.title" placeholder="Название рецепта">
+                        </label>
+                        <label class="form-field">
+                            Эмодзи
+                            <input v-model.trim="editingRecipe.emoji" placeholder="🥧">
+                        </label>
+                        <label class="form-field">
+                            Категория
+                            <input v-model.trim="editingRecipe.mainCategory" list="category-options" placeholder="🥧 Выпечка">
+                            <datalist id="category-options">
+                                <option v-for="cat in mainCategories" :key="cat" :value="cat"></option>
+                            </datalist>
+                        </label>
+                        <label class="form-field">
+                            Время, мин
+                            <input type="number" min="0" v-model.number="editingRecipe.time">
+                        </label>
+                        <label class="form-field">
+                            Порций
+                            <input type="number" min="1" v-model.number="editingRecipe.baseServings">
+                        </label>
+                        <label class="form-field">
+                            Ккал
+                            <input type="number" min="0" v-model.number="editingRecipe.calories">
+                        </label>
+                    </div>
+
+                    <label class="form-field" style="margin-top:12px;">
+                        Описание
+                        <textarea v-model="editingRecipe.description" placeholder="Короткая заметка, хранение, особенности"></textarea>
+                    </label>
+
+                    <label class="form-field" style="margin-top:12px;">
+                        Ингредиенты
+                        <textarea v-model="editingRecipe.ingredientsText" placeholder="Творог — 800 г | Молочные продукты&#10;Соль — щепотка | Специи"></textarea>
+                    </label>
+
+                    <label class="form-field" style="margin-top:12px;">
+                        Инструкция
+                        <textarea v-model="editingRecipe.instructions" placeholder="1. Первый шаг&#10;2. Второй шаг"></textarea>
+                    </label>
+
+                    <div class="form-grid" style="margin-top:12px;">
+                        <label class="form-field">
+                            Фото, путь или ссылка
+                            <input v-model.trim="editingRecipe.imageUrl" placeholder="images/example.jpg">
+                        </label>
+                        <label class="form-field">
+                            Видео, ссылка
+                            <input v-model.trim="editingRecipe.videoUrl" placeholder="https://...">
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <button class="btn" @click="saveRecipeEdit">Сохранить</button>
+                    <button class="btn btn-outline" @click="cancelRecipeEdit">Отмена</button>
+                    <button v-if="hasLocalRecipeEdit(editingRecipe.id)" class="btn btn-danger" @click="resetRecipeEdit(editingRecipe.id)">Сбросить мои правки</button>
                 </div>
             </main>
 
@@ -178,12 +260,81 @@
         // и доступен глобально. Если нет — раскомментируйте строку ниже и вставьте рецепты.
         // const initialRecipes = [ ... ];
 
+        const recipeEditStorageKey = 'sk_recipe_edits_v1';
+
+        function cloneRecipe(recipe) {
+            return JSON.parse(JSON.stringify(recipe));
+        }
+
+        function loadRecipeEdits() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(recipeEditStorageKey) || '{}');
+                return { edited: saved.edited || {}, custom: saved.custom || [] };
+            } catch (e) {
+                return { edited: {}, custom: [] };
+            }
+        }
+
+        function buildRecipesFromStorage() {
+            const saved = loadRecipeEdits();
+            const base = initialRecipes.map(recipe => {
+                const editedRecipe = saved.edited[recipe.id];
+                return editedRecipe ? { ...cloneRecipe(recipe), ...cloneRecipe(editedRecipe), id: recipe.id } : cloneRecipe(recipe);
+            });
+            return base.concat((saved.custom || []).map(cloneRecipe));
+        }
+
+        function ingredientToText(ingredient) {
+            const amount = Number(ingredient.amount);
+            const unit = ingredient.unit || '';
+            const amountText = amount === 1 && /по вкусу|по желанию|щепотка/i.test(unit)
+                ? unit
+                : `${ingredient.amount || 1} ${unit}`.trim();
+            return `${ingredient.name} — ${amountText}${ingredient.category ? ` | ${ingredient.category}` : ''}`;
+        }
+
+        function inferEditIngredientCategory(name) {
+            const lowerName = name.toLowerCase();
+            if (/куриц|говя|теляч|бекон|сардель|колбас|лосос|окун|кета|кревет|мидии|рыб|краб|индейк|фарш/.test(lowerName)) return 'Мясо/рыба';
+            if (/сыр|слив|масло слив|моцарелл|страчателл|сметан|творог|яйц|молок|кефир|йогурт/.test(lowerName)) return 'Молочные продукты';
+            if (/тыкв|кабач|перец|лук|чеснок|морков|картоф|шампинь|вешен|имбир|сельдер|помидор|зелень|укроп|кинза|лайм|лимон|огурц|маслин|горох|цедр|финик/.test(lowerName)) return 'Овощи и фрукты';
+            if (/паприк|соль|перец|мускат|лавров|бадьян|корица|гвоздик|кардамон|кориандр|трав|гарам/.test(lowerName)) return 'Специи';
+            if (/соус|паста|рассол/.test(lowerName)) return 'Соусы';
+            if (/масло/.test(lowerName)) return 'Масла';
+            return 'Бакалея';
+        }
+
+        function parseIngredientsText(text) {
+            return text
+                .split('\n')
+                .map(line => line.trim().replace(/^[•*-]\s*/, ''))
+                .filter(Boolean)
+                .map(line => {
+                    const [body, categoryFromLine] = line.split('|').map(part => part.trim());
+                    const [rawName, rawAmount] = body.split(/\s+—\s+/);
+                    const name = (rawName || '').trim();
+                    const details = (rawAmount || '').trim();
+                    const amountMatch = details.match(/^(\d+(?:[,.]\d+)?)(?:\s*[–-]\s*\d+(?:[,.]\d+)?)?\s*(.*)$/);
+                    const amount = amountMatch ? Number(amountMatch[1].replace(',', '.')) : 1;
+                    const unit = amountMatch ? (amountMatch[2] || 'шт').trim() : (details || 'по вкусу');
+
+                    return {
+                        name,
+                        amount,
+                        unit,
+                        category: categoryFromLine || inferEditIngredientCategory(name)
+                    };
+                })
+                .filter(ingredient => ingredient.name);
+        }
+
         const app = createApp({
             data() {
                 return {
                     view: 'catalog', search: '', filterCat: '', currentRecipe: null, servings: 2, timeLeft: 0, timerInt: null,
-                    doneSteps: [], showDayPicker: false,
-                    mainCategories: Array.from(new Set(initialRecipes.map(recipe => recipe.mainCategory))).filter(Boolean),
+                    doneSteps: [], showDayPicker: false, editingRecipe: null,
+                    recipeEdits: loadRecipeEdits(),
+                    recipes: buildRecipesFromStorage(),
                     weekDays: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
                     plan: JSON.parse(localStorage.getItem('sk_plan_v34') || '[]'),
                     stock: JSON.parse(localStorage.getItem('sk_stock_v34') || '{}'),
@@ -193,13 +344,15 @@
             },
             computed: {
                 filteredRecipes() {
-                    // Используем глобальный массив initialRecipes
-                    return initialRecipes.filter(r => {
+                    return this.recipes.filter(r => {
                         const mS = r.title.toLowerCase().includes(this.search.toLowerCase()) || 
                                    (r.ingredients && r.ingredients.some(i => i.name.toLowerCase().includes(this.search.toLowerCase())));
                         const mC = !this.filterCat || r.mainCategory === this.filterCat;
                         return mS && mC;
                     });
+                },
+                mainCategories() {
+                    return Array.from(new Set(this.recipes.map(recipe => recipe.mainCategory))).filter(Boolean);
                 },
                 formattedSteps() {
                     if(!this.currentRecipe) return [];
@@ -236,6 +389,83 @@
             },
             methods: {
                 openRecipe(r) { this.currentRecipe = r; this.view = 'recipe'; this.servings = r.baseServings || 2; this.doneSteps = []; window.scrollTo(0,0); },
+                startNewRecipe() {
+                    this.editingRecipe = {
+                        id: null,
+                        title: '',
+                        emoji: '🍽️',
+                        time: 30,
+                        calories: 0,
+                        mainCategory: this.filterCat || '🥧 Выпечка',
+                        videoUrl: '',
+                        imageUrl: '',
+                        baseServings: 1,
+                        description: '',
+                        ingredientsText: '',
+                        instructions: ''
+                    };
+                    this.view = 'edit';
+                    window.scrollTo(0,0);
+                },
+                startEditRecipe(recipe) {
+                    this.editingRecipe = {
+                        ...cloneRecipe(recipe),
+                        ingredientsText: (recipe.ingredients || []).map(ingredientToText).join('\n')
+                    };
+                    this.view = 'edit';
+                    window.scrollTo(0,0);
+                },
+                cancelRecipeEdit() {
+                    this.editingRecipe = null;
+                    this.view = this.currentRecipe ? 'recipe' : 'catalog';
+                },
+                hasLocalRecipeEdit(id) {
+                    return Boolean(id && this.recipeEdits.edited[id]);
+                },
+                saveRecipeEdit() {
+                    if (!this.editingRecipe || !this.editingRecipe.title.trim()) {
+                        alert('Добавьте название рецепта');
+                        return;
+                    }
+
+                    const recipe = {
+                        id: this.editingRecipe.id || Date.now(),
+                        title: this.editingRecipe.title.trim(),
+                        emoji: this.editingRecipe.emoji || '🍽️',
+                        time: Number(this.editingRecipe.time) || 0,
+                        calories: Number(this.editingRecipe.calories) || 0,
+                        mainCategory: this.editingRecipe.mainCategory || 'Разное',
+                        videoUrl: this.editingRecipe.videoUrl || '',
+                        imageUrl: this.editingRecipe.imageUrl || '',
+                        baseServings: Number(this.editingRecipe.baseServings) || 1,
+                        description: this.editingRecipe.description || '',
+                        ingredients: parseIngredientsText(this.editingRecipe.ingredientsText || ''),
+                        instructions: this.editingRecipe.instructions || ''
+                    };
+
+                    if (initialRecipes.some(baseRecipe => baseRecipe.id === recipe.id)) {
+                        this.recipeEdits.edited[recipe.id] = recipe;
+                    } else {
+                        const existingIndex = this.recipeEdits.custom.findIndex(customRecipe => customRecipe.id === recipe.id);
+                        if (existingIndex >= 0) this.recipeEdits.custom.splice(existingIndex, 1, recipe);
+                        else this.recipeEdits.custom.push(recipe);
+                    }
+
+                    localStorage.setItem(recipeEditStorageKey, JSON.stringify(this.recipeEdits));
+                    this.recipes = buildRecipesFromStorage();
+                    this.currentRecipe = this.recipes.find(savedRecipe => savedRecipe.id === recipe.id);
+                    this.editingRecipe = null;
+                    this.view = 'recipe';
+                },
+                resetRecipeEdit(id) {
+                    if (!id || !confirm('Сбросить ваши локальные правки этого рецепта?')) return;
+                    delete this.recipeEdits.edited[id];
+                    localStorage.setItem(recipeEditStorageKey, JSON.stringify(this.recipeEdits));
+                    this.recipes = buildRecipesFromStorage();
+                    this.currentRecipe = this.recipes.find(recipe => recipe.id === id);
+                    this.editingRecipe = null;
+                    this.view = 'recipe';
+                },
                 toggleStep(i) { this.doneSteps.includes(i) ? this.doneSteps = this.doneSteps.filter(x => x !== i) : this.doneSteps.push(i); },
                 formatTime(s) { return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; },
                 uploadPhoto(e) {
