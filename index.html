@@ -102,9 +102,10 @@
                 <div class="recipe-photo-detail" @click="$refs.fileInput.click()">
                     <img v-if="userPhotos[currentRecipe.id]" :src="userPhotos[currentRecipe.id]">
                     <img v-else-if="currentRecipe.imageUrl" :src="currentRecipe.imageUrl" style="cursor:pointer">
-                    <span v-else>📷 Нажмите, чтобы добавить фото</span>
+                    <span v-else>📷 Фото пока нет</span>
                     <input type="file" ref="fileInput" @change="uploadPhoto" style="display:none">
                 </div>
+                <button class="btn btn-outline" style="margin-bottom:20px;" @click="$refs.fileInput.click()">📷 Добавить / заменить фото</button>
 
                 <h1>{{currentRecipe.emoji}} {{currentRecipe.title}}</h1>
                 <p v-if="currentRecipe.description" style="opacity:0.7; margin-top:-10px;">{{currentRecipe.description}}</p>
@@ -144,6 +145,16 @@
                 <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
                     <h1 style="margin:0;">{{editingRecipe.id ? 'Редактирование рецепта' : 'Новый рецепт'}}</h1>
                     <button class="btn btn-outline" @click="cancelRecipeEdit">← Отмена</button>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0;">Фото</h3>
+                    <div class="recipe-photo-detail" @click="$refs.editFileInput.click()">
+                        <img v-if="editingPhotoPreview" :src="editingPhotoPreview">
+                        <span v-else>📷 Фото пока нет</span>
+                    </div>
+                    <button class="btn btn-outline" @click="$refs.editFileInput.click()">Выбрать фото с компьютера</button>
+                    <input type="file" ref="editFileInput" @change="uploadEditPhoto" style="display:none">
                 </div>
 
                 <div class="card">
@@ -332,7 +343,7 @@
             data() {
                 return {
                     view: 'catalog', search: '', filterCat: '', currentRecipe: null, servings: 2, timeLeft: 0, timerInt: null,
-                    doneSteps: [], showDayPicker: false, editingRecipe: null,
+                    doneSteps: [], showDayPicker: false, editingRecipe: null, editingPhotoData: null,
                     recipeEdits: loadRecipeEdits(),
                     recipes: buildRecipesFromStorage(),
                     weekDays: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
@@ -385,6 +396,13 @@
                         }
                     }
                     return grouped;
+                },
+                editingPhotoPreview() {
+                    if (!this.editingRecipe) return '';
+                    return this.editingPhotoData ||
+                           (this.editingRecipe.id && this.userPhotos[this.editingRecipe.id]) ||
+                           this.editingRecipe.imageUrl ||
+                           '';
                 }
             },
             methods: {
@@ -404,6 +422,7 @@
                         ingredientsText: '',
                         instructions: ''
                     };
+                    this.editingPhotoData = null;
                     this.view = 'edit';
                     window.scrollTo(0,0);
                 },
@@ -412,6 +431,7 @@
                         ...cloneRecipe(recipe),
                         ingredientsText: (recipe.ingredients || []).map(ingredientToText).join('\n')
                     };
+                    this.editingPhotoData = null;
                     this.view = 'edit';
                     window.scrollTo(0,0);
                 },
@@ -452,9 +472,14 @@
                     }
 
                     localStorage.setItem(recipeEditStorageKey, JSON.stringify(this.recipeEdits));
+                    if (this.editingPhotoData) {
+                        this.userPhotos[recipe.id] = this.editingPhotoData;
+                        this.save();
+                    }
                     this.recipes = buildRecipesFromStorage();
                     this.currentRecipe = this.recipes.find(savedRecipe => savedRecipe.id === recipe.id);
                     this.editingRecipe = null;
+                    this.editingPhotoData = null;
                     this.view = 'recipe';
                 },
                 resetRecipeEdit(id) {
@@ -469,8 +494,15 @@
                 toggleStep(i) { this.doneSteps.includes(i) ? this.doneSteps = this.doneSteps.filter(x => x !== i) : this.doneSteps.push(i); },
                 formatTime(s) { return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; },
                 uploadPhoto(e) {
+                    if (!e.target.files || !e.target.files[0]) return;
                     const reader = new FileReader();
                     reader.onload = (f) => { this.userPhotos[this.currentRecipe.id] = f.target.result; this.save(); };
+                    reader.readAsDataURL(e.target.files[0]);
+                },
+                uploadEditPhoto(e) {
+                    if (!e.target.files || !e.target.files[0]) return;
+                    const reader = new FileReader();
+                    reader.onload = (f) => { this.editingPhotoData = f.target.result; };
                     reader.readAsDataURL(e.target.files[0]);
                 },
                 saveToPlan(day) {

@@ -646,14 +646,40 @@ const inferIngredientCategory = (name) => {
     return 'Бакалея';
 };
 
-const markdownToInstructions = (text) => text
-    .replace(/^##\s+(?:\d+\.\s*)?.+$/gm, '')
-    .replace(/^###\s+(.+)$/gm, '\n$1:')
-    .replace(/^####\s+(.+)$/gm, '\n$1:')
-    .replace(/^\*\*(.+)\*\*$/gm, '$1')
-    .replace(/^- /gm, '• ')
-    .replace(/\*\*/g, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+const isIngredientHeader = (headerText) =>
+    /ингредиенты|для бульона|для супа|для подачи|для основы|для вкуса|специи/.test(headerText.toLowerCase());
+
+const markdownToInstructions = (text) => {
+    const lines = [];
+    let skipSection = false;
+
+    text.split('\n').forEach(line => {
+        if (/^#\s+/.test(line) || /^##\s+/.test(line)) return;
+        if (/^\*\*Выход:/i.test(line.trim())) return;
+
+        const section = line.match(/^###\s+(.+)$/);
+        if (section) {
+            skipSection = isIngredientHeader(section[1]);
+            if (!skipSection) lines.push(`${section[1]}:`);
+            return;
+        }
+
+        const subSection = line.match(/^####\s+(.+)$/);
+        if (subSection) {
+            if (!skipSection) lines.push(`${subSection[1]}:`);
+            return;
+        }
+
+        if (!skipSection) lines.push(line);
+    });
+
+    return lines
+        .join('\n')
+        .replace(/^\*\*(.+)\*\*$/gm, '$1')
+        .replace(/^- /gm, '• ')
+        .replace(/\*\*/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+};
 
 initialRecipes.push(...parseMarkdownRecipes(soupRecipesMarkdown));

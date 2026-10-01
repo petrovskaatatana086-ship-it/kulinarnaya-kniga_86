@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scandi-v4';
+const CACHE_NAME = 'scandi-v5';
 const ASSETS = ['./', './index.html', './recipes.js', './recipes-soups.js', './recipes-baking.js'];
 
 self.addEventListener('install', (e) => {
