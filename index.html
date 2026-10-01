@@ -6,6 +6,7 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- Подключаем файл с рецептами -->
     <script src="recipes.js"></script>
+    <script src="recipes-soups.js"></script>
     <style>
         /* (стили остаются без изменений) */
         :root {
@@ -78,7 +79,9 @@
                             <div v-else style="font-size: 50px;">{{recipe.emoji}}</div>
                         </div>
                         <h3 style="margin:0;">{{recipe.title}}</h3>
-                        <p style="opacity:0.6; font-size:14px; margin-top:5px;">{{recipe.time}} мин • {{recipe.calories}} ккал</p>
+                        <p style="opacity:0.6; font-size:14px; margin-top:5px;">
+                            {{recipe.time}} мин<span v-if="recipe.calories"> • {{recipe.calories}} ккал</span>
+                        </p>
                     </div>
                 </div>
             </main>
@@ -180,7 +183,7 @@
                 return {
                     view: 'catalog', search: '', filterCat: '', currentRecipe: null, servings: 2, timeLeft: 0, timerInt: null,
                     doneSteps: [], showDayPicker: false,
-                    mainCategories: ['🍜 Супы', '🥗 Салаты', '🥩 Основные (мясо)', '🐟 Основные (рыба)', '🥧 Выпечка', '🍰 Десерты'],
+                    mainCategories: Array.from(new Set(initialRecipes.map(recipe => recipe.mainCategory))).filter(Boolean),
                     weekDays: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
                     plan: JSON.parse(localStorage.getItem('sk_plan_v34') || '[]'),
                     stock: JSON.parse(localStorage.getItem('sk_stock_v34') || '{}'),
@@ -232,7 +235,7 @@
                 }
             },
             methods: {
-                openRecipe(r) { this.currentRecipe = r; this.view = 'recipe'; this.servings = 2; this.doneSteps = []; window.scrollTo(0,0); },
+                openRecipe(r) { this.currentRecipe = r; this.view = 'recipe'; this.servings = r.baseServings || 2; this.doneSteps = []; window.scrollTo(0,0); },
                 toggleStep(i) { this.doneSteps.includes(i) ? this.doneSteps = this.doneSteps.filter(x => x !== i) : this.doneSteps.push(i); },
                 formatTime(s) { return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; },
                 uploadPhoto(e) {
