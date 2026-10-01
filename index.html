@@ -137,7 +137,7 @@
 
                 <div style="display:flex; gap:12px;">
                     <button class="btn" style="flex:2;" @click="showDayPicker = true">📅 ДОБАВИТЬ В ПЛАН</button>
-                    <a v-if="currentRecipe.videoUrl" :href="currentRecipe.videoUrl" target="_blank" class="btn btn-blue" style="flex:1; text-align:center;">📺 ВИДЕО</a>
+                    <a v-for="(link, idx) in recipeVideoLinks(currentRecipe)" :key="link" :href="link" target="_blank" class="btn btn-blue" style="flex:1; text-align:center;">📺 ВИДЕО{{recipeVideoLinks(currentRecipe).length > 1 ? ' ' + (idx + 1) : ''}}</a>
                 </div>
             </main>
 
@@ -416,6 +416,7 @@
                         calories: 0,
                         mainCategory: this.filterCat || '🥧 Выпечка',
                         videoUrl: '',
+                        videoUrls: [],
                         imageUrl: '',
                         baseServings: 1,
                         description: '',
@@ -456,6 +457,7 @@
                         calories: Number(this.editingRecipe.calories) || 0,
                         mainCategory: this.editingRecipe.mainCategory || 'Разное',
                         videoUrl: this.editingRecipe.videoUrl || '',
+                        videoUrls: this.editingRecipe.videoUrl ? [this.editingRecipe.videoUrl] : [],
                         imageUrl: this.editingRecipe.imageUrl || '',
                         baseServings: Number(this.editingRecipe.baseServings) || 1,
                         description: this.editingRecipe.description || '',
@@ -504,6 +506,10 @@
                     const reader = new FileReader();
                     reader.onload = (f) => { this.editingPhotoData = f.target.result; };
                     reader.readAsDataURL(e.target.files[0]);
+                },
+                recipeVideoLinks(recipe) {
+                    if (!recipe) return [];
+                    return Array.from(new Set([...(recipe.videoUrls || []), recipe.videoUrl].filter(Boolean)));
                 },
                 saveToPlan(day) {
                     const newEntry = { ...JSON.parse(JSON.stringify(this.currentRecipe)), planId: Date.now(), day, servings: this.servings };

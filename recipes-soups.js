@@ -561,7 +561,8 @@ const parseMarkdownRecipes = (markdown, startId = 27) => {
             time: inferRecipeTime(block),
             calories: 0,
             mainCategory: '🍜 Супы',
-            videoUrl: '',
+            videoUrl: getSoupVideoLinks(title)[0] || '',
+            videoUrls: getSoupVideoLinks(title),
             imageUrl: '',
             baseServings: inferServings(block),
             description: outputMatch ? `Выход: ${outputMatch[1].trim()}` : '',
@@ -580,6 +581,38 @@ const pickSoupEmoji = (title) => {
     if (lowerTitle.includes('гриб')) return '🍄';
     if (lowerTitle.includes('тыкв')) return '🎃';
     return '🥣';
+};
+
+const getSoupVideoLinks = (title) => {
+    const linksByTitle = {
+        'Кабачковый крем-суп': [
+            'https://www.instagram.com/reel/DbiB-XetWza/?utm_source=ig_web_copy_link'
+        ],
+        'Тыквенный крем-суп в заморозку': [
+            'https://www.instagram.com/reel/DdbmSWDtqFs/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA=='
+        ],
+        'Сырный крем-суп с курицей': [
+            'https://www.instagram.com/reel/DbkxwyONZhp/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA==',
+            'https://www.instagram.com/reel/DbIvJOWtn45/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA=='
+        ],
+        'Концентрированный рыбный суп': [
+            'https://www.instagram.com/reel/DbTIzCNRqbe/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA=='
+        ],
+        'Фо Бо': [
+            'https://www.instagram.com/reel/DbSmLUVN02H/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA=='
+        ],
+        'Сырный крем-суп с беконом': [
+            'https://www.instagram.com/reel/DcGD8p0Nf8m/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA=='
+        ],
+        'Солянка — концентрированная заготовка': [
+            'https://www.instagram.com/reel/DThjDImDdvg/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA=='
+        ],
+        'Заготовка для горохового супа с копчёностями': [
+            'https://www.instagram.com/reel/DakMByctQHw/?utm_source=ig_web_copy_link&stkn=MzRlODBiNWFlZA=='
+        ]
+    };
+
+    return linksByTitle[title] || [];
 };
 
 const inferServings = (text) => {
