@@ -16,9 +16,9 @@
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 60px; line-height: 1.5; }
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 12px; flex-wrap: wrap; }
         .logo { font-size: 24px; font-weight: bold; color: var(--olive); cursor: pointer; }
-        .nav-buttons { display: flex; gap: 10px; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
 
         .card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); margin-bottom: 20px; overflow: hidden; }
         .btn { background: var(--olive); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -67,6 +67,9 @@
                 <div class="logo" @click="view = 'catalog'">🌿 ScandiKitchen</div>
                 <div class="nav-buttons">
                     <button class="btn btn-outline" @click="startNewRecipe">＋ РЕЦЕПТ</button>
+                    <button class="btn btn-outline" @click="exportDataFile">⬇ ДАННЫЕ</button>
+                    <button class="btn btn-outline" @click="$refs.importDataInput.click()">⬆ ИМПОРТ</button>
+                    <input type="file" ref="importDataInput" accept="application/json,.json" @change="importDataFile" style="display:none">
                     <button class="btn" @click="view = 'planner'">📅 ПЛАН</button>
                     <button class="btn btn-outline" @click="view = 'shopping'">🛒 ПОКУПКИ</button>
                 </div>
@@ -114,9 +117,9 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h3 style="margin:0;">Ингредиенты</h3>
                         <div style="display:flex; gap:10px; align-items:center;">
-                            <button @click="servings > 1 ? servings-- : null" class="btn btn-outline" style="padding:5px 12px;">-</button>
+                            <button @click="decreaseServings" class="btn btn-outline" style="padding:5px 12px;">-</button>
                             <span style="font-weight:bold;">{{servings}} порции</span>
-                            <button @click="servings++" class="btn btn-outline" style="padding:5px 12px;">+</button>
+                            <button @click="increaseServings" class="btn btn-outline" style="padding:5px 12px;">+</button>
                         </div>
                     </div>
                     <div v-for="(ing, idx) in currentRecipe.ingredients" :key="idx" class="ing-row">
@@ -272,6 +275,7 @@
         // const initialRecipes = [ ... ];
 
         const recipeEditStorageKey = 'sk_recipe_edits_v1';
+        const lastServingsStorageKey = 'sk_last_servings_v1';
 
         function cloneRecipe(recipe) {
             return JSON.parse(JSON.stringify(recipe));
@@ -283,6 +287,14 @@
                 return { edited: saved.edited || {}, custom: saved.custom || [] };
             } catch (e) {
                 return { edited: {}, custom: [] };
+            }
+        }
+
+        function loadJsonStorage(key, fallback) {
+            try {
+                return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+            } catch (e) {
+                return fallback;
             }
         }
 
@@ -350,7 +362,8 @@
                     plan: JSON.parse(localStorage.getItem('sk_plan_v34') || '[]'),
                     stock: JSON.parse(localStorage.getItem('sk_stock_v34') || '{}'),
                     stockCheck: JSON.parse(localStorage.getItem('sk_checks_v34') || '{}'),
-                    userPhotos: JSON.parse(localStorage.getItem('sk_photos_v34') || '{}')
+                    userPhotos: JSON.parse(localStorage.getItem('sk_photos_v34') || '{}'),
+                    lastServings: loadJsonStorage(lastServingsStorageKey, {})
                 }
             },
             computed: {
@@ -406,7 +419,28 @@
                 }
             },
             methods: {
-                openRecipe(r) { this.currentRecipe = r; this.view = 'recipe'; this.servings = r.baseServings || 2; this.doneSteps = []; window.scrollTo(0,0); },
+                openRecipe(r) {
+                    this.currentRecipe = r;
+                    this.view = 'recipe';
+                    this.servings = Number(this.lastServings[r.id]) || r.baseServings || 2;
+                    this.doneSteps = [];
+                    window.scrollTo(0,0);
+                },
+                increaseServings() {
+                    this.servings++;
+                    this.saveCurrentServings();
+                },
+                decreaseServings() {
+                    if (this.servings > 1) {
+                        this.servings--;
+                        this.saveCurrentServings();
+                    }
+                },
+                saveCurrentServings() {
+                    if (!this.currentRecipe) return;
+                    this.lastServings[this.currentRecipe.id] = this.servings;
+                    localStorage.setItem(lastServingsStorageKey, JSON.stringify(this.lastServings));
+                },
                 startNewRecipe() {
                     this.editingRecipe = {
                         id: null,
@@ -480,6 +514,7 @@
                     }
                     this.recipes = buildRecipesFromStorage();
                     this.currentRecipe = this.recipes.find(savedRecipe => savedRecipe.id === recipe.id);
+                    this.servings = Number(this.lastServings[recipe.id]) || recipe.baseServings || 1;
                     this.editingRecipe = null;
                     this.editingPhotoData = null;
                     this.view = 'recipe';
@@ -510,6 +545,87 @@
                 recipeVideoLinks(recipe) {
                     if (!recipe) return [];
                     return Array.from(new Set([...(recipe.videoUrls || []), recipe.videoUrl].filter(Boolean)));
+                },
+                exportDataFile() {
+                    const data = {
+                        app: 'ScandiKitchen',
+                        version: 1,
+                        exportedAt: new Date().toISOString(),
+                        recipeEdits: this.recipeEdits,
+                        plan: this.plan,
+                        stock: this.stock,
+                        stockCheck: this.stockCheck,
+                        userPhotos: this.userPhotos,
+                        lastServings: this.lastServings
+                    };
+                    const json = JSON.stringify(data, null, 2);
+                    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `scandikitchen-data-${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    URL.revokeObjectURL(url);
+                },
+                importDataFile(e) {
+                    const file = e.target.files && e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const imported = JSON.parse(event.target.result);
+                            const importedEdits = imported.recipeEdits || {
+                                edited: imported.edited || {},
+                                custom: imported.custom || []
+                            };
+                            const shouldImport = confirm('Загрузить данные из файла? Рецепты и правки добавятся, совпадающие id обновятся.');
+                            if (!shouldImport) return;
+
+                            this.recipeEdits.edited = {
+                                ...this.recipeEdits.edited,
+                                ...(importedEdits.edited || {})
+                            };
+
+                            const customById = new Map((this.recipeEdits.custom || []).map(recipe => [String(recipe.id), recipe]));
+                            (importedEdits.custom || []).forEach(recipe => {
+                                if (recipe && recipe.id) customById.set(String(recipe.id), recipe);
+                            });
+                            this.recipeEdits.custom = Array.from(customById.values());
+
+                            this.plan = this.mergePlans(this.plan, imported.plan || []);
+                            this.stock = { ...this.stock, ...(imported.stock || {}) };
+                            this.stockCheck = { ...this.stockCheck, ...(imported.stockCheck || {}) };
+                            this.userPhotos = { ...this.userPhotos, ...(imported.userPhotos || {}) };
+                            this.lastServings = { ...this.lastServings, ...(imported.lastServings || {}) };
+
+                            localStorage.setItem(recipeEditStorageKey, JSON.stringify(this.recipeEdits));
+                            localStorage.setItem(lastServingsStorageKey, JSON.stringify(this.lastServings));
+                            this.save();
+                            this.recipes = buildRecipesFromStorage();
+                            if (this.currentRecipe) {
+                                this.currentRecipe = this.recipes.find(recipe => recipe.id === this.currentRecipe.id) || this.currentRecipe;
+                                this.servings = Number(this.lastServings[this.currentRecipe.id]) || this.currentRecipe.baseServings || 2;
+                            }
+                            alert('Данные загружены.');
+                        } catch (error) {
+                            alert('Не удалось прочитать файл. Нужен JSON-файл экспорта ScandiKitchen.');
+                        } finally {
+                            e.target.value = '';
+                        }
+                    };
+                    reader.readAsText(file, 'utf-8');
+                },
+                mergePlans(currentPlan, importedPlan) {
+                    const planById = new Map((currentPlan || []).map(item => [String(item.planId), item]));
+                    (importedPlan || []).forEach(item => {
+                        if (!item) return;
+                        const planId = item.planId || Date.now() + Math.random();
+                        planById.set(String(planId), { ...item, planId });
+                    });
+                    return Array.from(planById.values());
                 },
                 saveToPlan(day) {
                     const newEntry = { ...JSON.parse(JSON.stringify(this.currentRecipe)), planId: Date.now(), day, servings: this.servings };
@@ -546,11 +662,13 @@
                     localStorage.setItem('sk_stock_v34', JSON.stringify(this.stock));
                     localStorage.setItem('sk_checks_v34', JSON.stringify(this.stockCheck));
                     localStorage.setItem('sk_photos_v34', JSON.stringify(this.userPhotos));
+                    localStorage.setItem(lastServingsStorageKey, JSON.stringify(this.lastServings));
                 }
             },
             watch: {
                 stock: { deep: true, handler() { this.save() } },
-                stockCheck: { deep: true, handler() { this.save() } }
+                stockCheck: { deep: true, handler() { this.save() } },
+                servings() { this.saveCurrentServings(); }
             }
         });
 
