@@ -39,6 +39,16 @@
         .favorite-btn { width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(255,255,255,0.92); color: #777; box-shadow: 0 6px 16px rgba(0,0,0,0.14); cursor: pointer; font-size: 22px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
         .favorite-btn.active { color: #d99a00; background: #fff7d7; }
         .favorite-card-btn { position: absolute; top: 12px; right: 12px; z-index: 2; }
+        .quick-plan-btn { position: absolute; top: 62px; right: 12px; z-index: 2; }
+        .mini-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .tag-pill { border: none; background: var(--light); color: var(--olive); border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .tag-pill.active { background: var(--olive); color: white; }
+        .meta-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .btn-small { padding: 8px 12px; border-radius: 10px; font-size: 13px; }
+        .notes-area { width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 12px; padding: 12px; font: inherit; min-height: 110px; resize: vertical; }
+        .cook-step { font-size: 22px; line-height: 1.55; padding: 22px; }
+        .shopping-row { padding:10px 0; display:grid; grid-template-columns: 28px 1fr auto; gap:10px; align-items:center; border-bottom:1px solid #f0f0f0; }
+        .shopping-row.done { opacity: 0.45; text-decoration: line-through; }
         
         .recipe-photo-detail { width: 100%; height: 350px; border-radius: 20px; overflow: hidden; margin-bottom: 20px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .recipe-photo-detail img { width: 100%; height: 100%; object-fit: cover; }
@@ -57,6 +67,13 @@
         .timer-widget { position: fixed; bottom: 20px; right: 20px; background: var(--olive); color: white; padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; display: flex; align-items: center; gap: 15px; font-weight: bold; }
         
         [v-cloak] { display: none; }
+        @media print {
+            header, .nav-buttons, .timer-widget, .no-print, .favorite-btn, .quick-plan-btn { display: none !important; }
+            body { background: white; color: #111; padding: 0; }
+            .container { max-width: none; padding: 0; }
+            .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+            .recipe-photo-detail { height: 220px; }
+        }
     </style>
 </head>
 <body>
@@ -71,7 +88,9 @@
                 <div class="logo" @click="showCatalog">🌿 ScandiKitchen</div>
                 <div class="nav-buttons">
                     <button class="btn btn-outline" @click="startNewRecipe">＋ РЕЦЕПТ</button>
-                    <button class="btn btn-outline" @click="exportDataFile">⬇ ДАННЫЕ</button>
+                    <button class="btn btn-outline" @click="exportDataFile(true)">⬇ ДАННЫЕ</button>
+                    <button class="btn btn-outline" @click="exportDataFile(false)">⬇ БЕЗ ФОТО</button>
+                    <button class="btn btn-outline" @click="exportRecipesFile">⬇ РЕЦЕПТЫ</button>
                     <button class="btn btn-outline" @click="$refs.importDataInput.click()">⬆ ИМПОРТ</button>
                     <input type="file" ref="importDataInput" accept="application/json,.json" @change="importDataFile" style="display:none">
                     <button class="btn" @click="view = 'planner'">📅 ПЛАН</button>
@@ -82,15 +101,20 @@
             <main v-if="view === 'catalog'">
                 <input type="text" v-model="search" class="search-input" placeholder="Поиск блюда или ингредиента...">
                 <div class="filter-grid">
-                    <div class="tab" :class="{active: filterCat === ''}" @click="filterCat = ''">Все</div>
-                    <div class="tab" :class="{active: filterCat === favoriteFilterKey}" @click="filterCat = favoriteFilterKey">⭐ Избранное</div>
-                    <div v-for="cat in mainCategories" :key="cat" class="tab" :class="{active: filterCat === cat}" @click="filterCat = cat">{{cat}}</div>
+                    <div class="tab" :class="{active: filterCat === ''}" @click="filterCat = ''; activeTag = ''">Все</div>
+                    <div class="tab" :class="{active: filterCat === favoriteFilterKey}" @click="filterCat = favoriteFilterKey; activeTag = ''">⭐ Избранное</div>
+                    <div v-for="cat in mainCategories" :key="cat" class="tab" :class="{active: filterCat === cat}" @click="filterCat = cat; activeTag = ''">{{cat}}</div>
+                </div>
+                <div v-if="allTags.length" class="mini-tags" style="margin-bottom:20px;">
+                    <button class="tag-pill" :class="{active: activeTag === ''}" @click="activeTag = ''">Все теги</button>
+                    <button v-for="tag in allTags" :key="tag" class="tag-pill" :class="{active: activeTag === tag}" @click="activeTag = tag">#{{tag}}</button>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
                     <div v-for="recipe in filteredRecipes" :key="recipe.id" class="card recipe-card" @click="openRecipe(recipe)" style="cursor:pointer">
                         <button class="favorite-btn favorite-card-btn" :class="{active: isFavorite(recipe.id)}" @click.stop="toggleFavorite(recipe.id)" :title="isFavorite(recipe.id) ? 'Убрать из избранного' : 'Добавить в избранное'">
                             {{isFavorite(recipe.id) ? '★' : '☆'}}
                         </button>
+                        <button class="favorite-btn quick-plan-btn" @click.stop="quickPlanRecipe(recipe)" title="Быстро добавить в план">📅</button>
                         <div class="recipe-photo-main">
                             <img v-if="userPhotos[recipe.id]" :src="userPhotos[recipe.id]">
                             <img v-else-if="recipe.imageUrl" :src="recipe.imageUrl">
@@ -100,17 +124,26 @@
                         <p style="opacity:0.6; font-size:14px; margin-top:5px;">
                             {{recipe.time}} мин<span v-if="recipe.calories"> • {{recipe.calories}} ккал</span>
                         </p>
+                        <div class="meta-row" style="font-size:13px; opacity:0.75;">
+                            <span v-if="recipeStatus[recipe.id]?.cooked">✓ готовила</span>
+                            <span v-if="recipeStatus[recipe.id]?.rating">★ {{recipeStatus[recipe.id].rating}}/5</span>
+                        </div>
+                        <div v-if="parseTags(recipe.tags).length" class="mini-tags">
+                            <button v-for="tag in parseTags(recipe.tags)" :key="tag" class="tag-pill" @click.stop="activeTag = tag">#{{tag}}</button>
+                        </div>
                     </div>
                 </div>
             </main>
 
             <main v-if="view === 'recipe'">
-                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
-                    <button @click="view = 'catalog'" class="btn btn-outline">← К каталогу</button>
+                <div class="no-print" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                    <button @click="view = 'catalog'" class="btn btn-outline">← {{catalogBackLabel}}</button>
                     <button @click="startEditRecipe(currentRecipe)" class="btn">✎ Редактировать</button>
                     <button class="btn btn-outline" @click="toggleFavorite(currentRecipe.id)">
                         {{isFavorite(currentRecipe.id) ? '★ В избранном' : '☆ В избранное'}}
                     </button>
+                    <button class="btn btn-outline" @click="startCookingMode">👩‍🍳 Готовлю</button>
+                    <button class="btn btn-outline" @click="printRecipe">🖨 Печать</button>
                 </div>
                 
                 <div class="recipe-photo-detail" @click="$refs.fileInput.click()">
@@ -123,6 +156,30 @@
 
                 <h1>{{currentRecipe.emoji}} {{currentRecipe.title}}</h1>
                 <p v-if="currentRecipe.description" style="opacity:0.7; margin-top:-10px;">{{currentRecipe.description}}</p>
+                <div v-if="parseTags(currentRecipe.tags).length" class="mini-tags" style="margin-bottom:16px;">
+                    <button v-for="tag in parseTags(currentRecipe.tags)" :key="tag" class="tag-pill" @click="activeTag = tag; view = 'catalog'">#{{tag}}</button>
+                </div>
+
+                <div class="card no-print">
+                    <h3 style="margin-top:0;">Мой опыт</h3>
+                    <div class="meta-row">
+                        <button class="btn btn-outline btn-small" :class="{active: recipeStatus[currentRecipe.id]?.cooked}" @click="toggleCooked(currentRecipe.id)">
+                            {{recipeStatus[currentRecipe.id]?.cooked ? '✓ Готовила' : 'Отметить: готовила'}}
+                        </button>
+                        <button v-for="score in 5" :key="score" class="btn btn-outline btn-small" @click="setRating(currentRecipe.id, score)">
+                            {{score <= (recipeStatus[currentRecipe.id]?.rating || 0) ? '★' : '☆'}}
+                        </button>
+                        <button class="btn btn-outline btn-small" @click="setRecipeVerdict(currentRecipe.id, 'repeat')">Повторить</button>
+                        <button class="btn btn-outline btn-small" @click="setRecipeVerdict(currentRecipe.id, 'skip')">Не зашло</button>
+                        <span v-if="recipeStatus[currentRecipe.id]?.verdict === 'repeat'">Буду повторять</span>
+                        <span v-if="recipeStatus[currentRecipe.id]?.verdict === 'skip'">Не зашло</span>
+                    </div>
+                </div>
+
+                <div class="card no-print">
+                    <h3 style="margin-top:0;">Мои заметки</h3>
+                    <textarea class="notes-area" v-model="recipeNotes[currentRecipe.id]" @input="saveRecipeNotes" placeholder="Что изменить в следующий раз, сколько реально готовилось, какие замены сработали..."></textarea>
+                </div>
 
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -152,6 +209,27 @@
                 <div style="display:flex; gap:12px;">
                     <button class="btn" style="flex:2;" @click="showDayPicker = true">📅 ДОБАВИТЬ В ПЛАН</button>
                     <a v-for="(link, idx) in recipeVideoLinks(currentRecipe)" :key="link" :href="link" target="_blank" class="btn btn-blue" style="flex:1; text-align:center;">📺 ВИДЕО{{recipeVideoLinks(currentRecipe).length > 1 ? ' ' + (idx + 1) : ''}}</a>
+                </div>
+            </main>
+
+            <main v-if="view === 'cook' && currentRecipe">
+                <div class="no-print" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                    <button @click="stopCookingMode" class="btn btn-outline">← К рецепту</button>
+                    <button @click="decreaseServings" class="btn btn-outline">-</button>
+                    <span style="font-weight:bold; align-self:center;">{{servings}} порции</span>
+                    <button @click="increaseServings" class="btn btn-outline">+</button>
+                </div>
+                <h1>{{currentRecipe.emoji}} {{currentRecipe.title}}</h1>
+                <div class="card">
+                    <h3 style="margin-top:0;">Ингредиенты</h3>
+                    <div v-for="(ing, idx) in currentRecipe.ingredients" :key="idx" class="ing-row">
+                        <span>{{ing.name}}</span>
+                        <b>{{ (ing.amount / (currentRecipe.baseServings || 2) * servings).toFixed(0) }} {{ing.unit}}</b>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-top:0;">Шаги</h3>
+                    <div v-for="(line, idx) in formattedSteps" :key="idx" class="instr-step cook-step" :class="{done: doneSteps.includes(idx)}" @click="toggleStep(idx)" v-html="line"></div>
                 </div>
             </main>
 
@@ -199,6 +277,10 @@
                         <label class="form-field">
                             Ккал
                             <input type="number" min="0" v-model.number="editingRecipe.calories">
+                        </label>
+                        <label class="form-field">
+                            Теги
+                            <input v-model.trim="editingRecipe.tagsText" placeholder="заморозка, быстро, ужин">
                         </label>
                     </div>
 
@@ -254,18 +336,23 @@
             <main v-if="view === 'shopping'">
                 <h1>Список покупок</h1>
                 <div class="card">
-                    <div v-for="(items, cat) in aggregatedList" :key="cat">
+                    <label class="form-field" style="margin-bottom:16px;">
+                        Добавить вручную
+                        <textarea v-model="manualShoppingText" @input="saveShoppingExtras" placeholder="Фольга — 1 рулон | Разное&#10;Пакеты для заморозки — 1 уп | Разное"></textarea>
+                    </label>
+                    <div v-for="(items, cat) in groupedShoppingList" :key="cat">
                         <h4 style="color:var(--olive); border-bottom:2px solid var(--light); padding-bottom:5px; margin-top:20px;">{{cat}}</h4>
-                        <div v-for="item in items" :key="item.name" style="padding:10px 0; display:flex; justify-content:space-between; border-bottom:1px solid #f0f0f0;">
+                        <div v-for="item in items" :key="shoppingItemKey(item)" class="shopping-row" :class="{done: shoppingDone[shoppingItemKey(item)]}">
+                            <input type="checkbox" v-model="shoppingDone[shoppingItemKey(item)]" @change="saveShoppingExtras" style="width:20px; height:20px;">
                             <span>{{item.name}}</span>
                             <b>{{item.buy}} {{item.unit}}</b>
                         </div>
                     </div>
-                    <div v-if="Object.keys(aggregatedList).length === 0" style="text-align:center; padding:50px; opacity:0.5;">
+                    <div v-if="Object.keys(groupedShoppingList).length === 0" style="text-align:center; padding:50px; opacity:0.5;">
                         Ваш список пуст. Добавьте блюда в план питания!
                     </div>
                 </div>
-                <button v-if="Object.keys(aggregatedList).length > 0" @click="exportToTelegram" class="btn btn-blue" style="width:100%; font-size:18px; padding:20px;">✈ ОТПРАВИТЬ В TELEGRAM</button>
+                <button v-if="Object.keys(groupedShoppingList).length > 0" @click="exportToTelegram" class="btn btn-blue" style="width:100%; font-size:18px; padding:20px;">✈ ОТПРАВИТЬ В TELEGRAM</button>
             </main>
 
             <div v-if="showDayPicker" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:2000;" @click.self="showDayPicker = false">
@@ -288,6 +375,10 @@
         const recipeEditStorageKey = 'sk_recipe_edits_v1';
         const lastServingsStorageKey = 'sk_last_servings_v1';
         const favoritesStorageKey = 'sk_favorites_v1';
+        const recipeNotesStorageKey = 'sk_recipe_notes_v1';
+        const recipeStatusStorageKey = 'sk_recipe_status_v1';
+        const shoppingDoneStorageKey = 'sk_shopping_done_v1';
+        const manualShoppingStorageKey = 'sk_manual_shopping_v1';
         const favoriteFilterKey = '__favorites';
 
         function cloneRecipe(recipe) {
@@ -364,10 +455,19 @@
                 .filter(ingredient => ingredient.name);
         }
 
+        function parseTags(tags) {
+            if (Array.isArray(tags)) return tags.map(tag => String(tag).trim()).filter(Boolean);
+            return String(tags || '')
+                .split(',')
+                .map(tag => tag.trim().replace(/^#/, ''))
+                .filter(Boolean);
+        }
+
         const app = createApp({
             data() {
                 return {
-                    view: 'catalog', search: '', filterCat: '', favoriteFilterKey, currentRecipe: null, servings: 2, timeLeft: 0, timerInt: null,
+                    view: 'catalog', search: '', filterCat: '', activeTag: '', favoriteFilterKey, currentRecipe: null, servings: 2, timeLeft: 0, timerInt: null,
+                    previousView: 'recipe', wakeLock: null,
                     doneSteps: [], showDayPicker: false, editingRecipe: null, editingPhotoData: null,
                     recipeEdits: loadRecipeEdits(),
                     recipes: buildRecipesFromStorage(),
@@ -377,7 +477,11 @@
                     stockCheck: JSON.parse(localStorage.getItem('sk_checks_v34') || '{}'),
                     userPhotos: JSON.parse(localStorage.getItem('sk_photos_v34') || '{}'),
                     lastServings: loadJsonStorage(lastServingsStorageKey, {}),
-                    favorites: loadJsonStorage(favoritesStorageKey, {})
+                    favorites: loadJsonStorage(favoritesStorageKey, {}),
+                    recipeNotes: loadJsonStorage(recipeNotesStorageKey, {}),
+                    recipeStatus: loadJsonStorage(recipeStatusStorageKey, {}),
+                    shoppingDone: loadJsonStorage(shoppingDoneStorageKey, {}),
+                    manualShoppingText: localStorage.getItem(manualShoppingStorageKey) || ''
                 }
             },
             computed: {
@@ -387,11 +491,23 @@
                                    (r.ingredients && r.ingredients.some(i => i.name.toLowerCase().includes(this.search.toLowerCase())));
                         const mC = !this.filterCat || this.filterCat === this.favoriteFilterKey || r.mainCategory === this.filterCat;
                         const mF = this.filterCat !== this.favoriteFilterKey || this.isFavorite(r.id);
-                        return mS && mC && mF;
+                        const mT = !this.activeTag || this.parseTags(r.tags).includes(this.activeTag);
+                        return mS && mC && mF && mT;
                     });
                 },
                 mainCategories() {
                     return Array.from(new Set(this.recipes.map(recipe => recipe.mainCategory))).filter(Boolean);
+                },
+                allTags() {
+                    const tags = new Set();
+                    this.recipes.forEach(recipe => this.parseTags(recipe.tags).forEach(tag => tags.add(tag)));
+                    return Array.from(tags).sort((a, b) => a.localeCompare(b, 'ru'));
+                },
+                catalogBackLabel() {
+                    if (this.activeTag) return `к тегу #${this.activeTag}`;
+                    if (this.filterCat === this.favoriteFilterKey) return 'к избранному';
+                    if (this.filterCat) return `к категории ${this.filterCat}`;
+                    return 'к каталогу';
                 },
                 formattedSteps() {
                     if(!this.currentRecipe) return [];
@@ -409,8 +525,9 @@
                     this.plan.forEach(p => {
                         if (!p.ingredients) return;
                         p.ingredients.forEach(ing => {
-                            if(!total[ing.name]) total[ing.name] = { ...ing, amount: 0 };
-                            total[ing.name].amount += (ing.amount / (p.baseServings || 2) * p.servings);
+                            const key = this.normalizeIngredientName(ing.name);
+                            if(!total[key]) total[key] = { ...ing, name: key, amount: 0 };
+                            total[key].amount += (ing.amount / (p.baseServings || 2) * p.servings);
                         });
                     });
                     let grouped = {};
@@ -423,6 +540,34 @@
                             grouped[c].push({ name: n, buy: buy.toFixed(0), unit: total[n].unit });
                         }
                     }
+                    return grouped;
+                },
+                manualShoppingItems() {
+                    return this.manualShoppingText
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(Boolean)
+                        .map(line => {
+                            const [body, categoryFromLine] = line.split('|').map(part => part.trim());
+                            const [rawName, rawAmount] = body.split(/\s+—\s+/);
+                            const name = (rawName || body || '').trim();
+                            const amountMatch = (rawAmount || '').trim().match(/^(\d+(?:[,.]\d+)?)?\s*(.*)$/);
+                            return {
+                                name,
+                                buy: amountMatch && amountMatch[1] ? amountMatch[1].replace(',', '.') : '',
+                                unit: amountMatch ? (amountMatch[2] || '').trim() : '',
+                                category: categoryFromLine || 'Разное'
+                            };
+                        })
+                        .filter(item => item.name);
+                },
+                groupedShoppingList() {
+                    const grouped = cloneRecipe(this.aggregatedList);
+                    this.manualShoppingItems.forEach(item => {
+                        const category = item.category || 'Разное';
+                        if (!grouped[category]) grouped[category] = [];
+                        grouped[category].push(item);
+                    });
                     return grouped;
                 },
                 editingPhotoPreview() {
@@ -438,7 +583,19 @@
                     this.view = 'catalog';
                     this.filterCat = '';
                     this.search = '';
+                    this.activeTag = '';
                     window.scrollTo(0,0);
+                },
+                parseTags,
+                normalizeIngredientName(name) {
+                    const lowerName = String(name || '').toLowerCase();
+                    if (/помидор|томат|черри/.test(lowerName)) return 'Помидоры';
+                    if (/лук/.test(lowerName)) return 'Лук';
+                    if (/чеснок/.test(lowerName)) return 'Чеснок';
+                    if (/сливки/.test(lowerName)) return 'Сливки';
+                    if (/творог/.test(lowerName)) return 'Творог';
+                    if (/яйц/.test(lowerName)) return 'Яйца';
+                    return String(name || '').trim();
                 },
                 isFavorite(id) {
                     return Boolean(this.favorites[id]);
@@ -448,6 +605,54 @@
                     if (this.favorites[id]) delete this.favorites[id];
                     else this.favorites[id] = true;
                     localStorage.setItem(favoritesStorageKey, JSON.stringify(this.favorites));
+                },
+                toggleCooked(id) {
+                    const status = this.recipeStatus[id] || {};
+                    this.recipeStatus[id] = { ...status, cooked: !status.cooked };
+                    this.saveRecipeStatus();
+                },
+                setRating(id, rating) {
+                    const status = this.recipeStatus[id] || {};
+                    this.recipeStatus[id] = { ...status, rating };
+                    this.saveRecipeStatus();
+                },
+                setRecipeVerdict(id, verdict) {
+                    const status = this.recipeStatus[id] || {};
+                    this.recipeStatus[id] = { ...status, verdict };
+                    this.saveRecipeStatus();
+                },
+                saveRecipeStatus() {
+                    localStorage.setItem(recipeStatusStorageKey, JSON.stringify(this.recipeStatus));
+                },
+                saveRecipeNotes() {
+                    localStorage.setItem(recipeNotesStorageKey, JSON.stringify(this.recipeNotes));
+                },
+                quickPlanRecipe(recipe) {
+                    this.currentRecipe = recipe;
+                    this.servings = Number(this.lastServings[recipe.id]) || recipe.baseServings || 2;
+                    this.showDayPicker = true;
+                },
+                async startCookingMode() {
+                    this.previousView = this.view;
+                    this.view = 'cook';
+                    window.scrollTo(0,0);
+                    if ('wakeLock' in navigator) {
+                        try {
+                            this.wakeLock = await navigator.wakeLock.request('screen');
+                        } catch (e) {
+                            this.wakeLock = null;
+                        }
+                    }
+                },
+                async stopCookingMode() {
+                    this.view = 'recipe';
+                    if (this.wakeLock) {
+                        await this.wakeLock.release();
+                        this.wakeLock = null;
+                    }
+                },
+                printRecipe() {
+                    setTimeout(() => window.print(), 50);
                 },
                 openRecipe(r) {
                     this.currentRecipe = r;
@@ -484,6 +689,7 @@
                         imageUrl: '',
                         baseServings: 1,
                         description: '',
+                        tagsText: '',
                         ingredientsText: '',
                         instructions: ''
                     };
@@ -494,6 +700,7 @@
                 startEditRecipe(recipe) {
                     this.editingRecipe = {
                         ...cloneRecipe(recipe),
+                        tagsText: this.parseTags(recipe.tags).join(', '),
                         ingredientsText: (recipe.ingredients || []).map(ingredientToText).join('\n')
                     };
                     this.editingPhotoData = null;
@@ -525,6 +732,7 @@
                         imageUrl: this.editingRecipe.imageUrl || '',
                         baseServings: Number(this.editingRecipe.baseServings) || 1,
                         description: this.editingRecipe.description || '',
+                        tags: parseTags(this.editingRecipe.tagsText || ''),
                         ingredients: parseIngredientsText(this.editingRecipe.ingredientsText || ''),
                         instructions: this.editingRecipe.instructions || ''
                     };
@@ -576,7 +784,7 @@
                     if (!recipe) return [];
                     return Array.from(new Set([...(recipe.videoUrls || []), recipe.videoUrl].filter(Boolean)));
                 },
-                exportDataFile() {
+                exportDataFile(includePhotos = true) {
                     const data = {
                         app: 'ScandiKitchen',
                         version: 1,
@@ -585,16 +793,42 @@
                         plan: this.plan,
                         stock: this.stock,
                         stockCheck: this.stockCheck,
-                        userPhotos: this.userPhotos,
+                        userPhotos: includePhotos ? this.userPhotos : {},
                         lastServings: this.lastServings,
-                        favorites: this.favorites
+                        favorites: this.favorites,
+                        recipeNotes: this.recipeNotes,
+                        recipeStatus: this.recipeStatus,
+                        shoppingDone: this.shoppingDone,
+                        manualShoppingText: this.manualShoppingText
                     };
                     const json = JSON.stringify(data, null, 2);
                     const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = `scandikitchen-data-${new Date().toISOString().slice(0, 10)}.json`;
+                    link.download = `scandikitchen-${includePhotos ? 'data' : 'data-no-photos'}-${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    URL.revokeObjectURL(url);
+                },
+                exportRecipesFile() {
+                    const data = {
+                        app: 'ScandiKitchenRecipes',
+                        version: 1,
+                        exportedAt: new Date().toISOString(),
+                        recipeEdits: this.recipeEdits,
+                        favorites: this.favorites,
+                        lastServings: this.lastServings,
+                        recipeNotes: this.recipeNotes,
+                        recipeStatus: this.recipeStatus
+                    };
+                    const json = JSON.stringify(data, null, 2);
+                    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `scandikitchen-recipes-${new Date().toISOString().slice(0, 10)}.json`;
                     document.body.appendChild(link);
                     link.click();
                     link.remove();
@@ -632,10 +866,17 @@
                             this.userPhotos = { ...this.userPhotos, ...(imported.userPhotos || {}) };
                             this.lastServings = { ...this.lastServings, ...(imported.lastServings || {}) };
                             this.favorites = { ...this.favorites, ...(imported.favorites || {}) };
+                            this.recipeNotes = { ...this.recipeNotes, ...(imported.recipeNotes || {}) };
+                            this.recipeStatus = { ...this.recipeStatus, ...(imported.recipeStatus || {}) };
+                            this.shoppingDone = { ...this.shoppingDone, ...(imported.shoppingDone || {}) };
+                            if (typeof imported.manualShoppingText === 'string') this.manualShoppingText = imported.manualShoppingText;
 
                             localStorage.setItem(recipeEditStorageKey, JSON.stringify(this.recipeEdits));
                             localStorage.setItem(lastServingsStorageKey, JSON.stringify(this.lastServings));
                             localStorage.setItem(favoritesStorageKey, JSON.stringify(this.favorites));
+                            localStorage.setItem(recipeNotesStorageKey, JSON.stringify(this.recipeNotes));
+                            localStorage.setItem(recipeStatusStorageKey, JSON.stringify(this.recipeStatus));
+                            this.saveShoppingExtras();
                             this.save();
                             this.recipes = buildRecipesFromStorage();
                             if (this.currentRecipe) {
@@ -660,6 +901,13 @@
                     });
                     return Array.from(planById.values());
                 },
+                shoppingItemKey(item) {
+                    return `${item.category || 'Разное'}|${item.name}|${item.unit || ''}`;
+                },
+                saveShoppingExtras() {
+                    localStorage.setItem(shoppingDoneStorageKey, JSON.stringify(this.shoppingDone));
+                    localStorage.setItem(manualShoppingStorageKey, this.manualShoppingText);
+                },
                 saveToPlan(day) {
                     const newEntry = { ...JSON.parse(JSON.stringify(this.currentRecipe)), planId: Date.now(), day, servings: this.servings };
                     this.plan.push(newEntry); this.save(); this.showDayPicker = false;
@@ -674,8 +922,9 @@
                         if(this.planByDay[d].length) txt += `\n📍 ${d.toUpperCase()}:\n` + this.planByDay[d].map(m => ` • ${m.title}`).join('\n') + '\n';
                     });
                     txt += "\n🛒 НУЖНО КУПИТЬ:\n";
-                    for(let c in this.aggregatedList) {
-                        txt += `\n🔹 ${c.toUpperCase()}:\n` + this.aggregatedList[c].map(i => ` - ${i.name}: ${i.buy} ${i.unit}`).join('\n') + '\n';
+                    for(let c in this.groupedShoppingList) {
+                        const items = this.groupedShoppingList[c].filter(i => !this.shoppingDone[this.shoppingItemKey(i)]);
+                        if (items.length) txt += `\n🔹 ${c.toUpperCase()}:\n` + items.map(i => ` - ${i.name}: ${i.buy} ${i.unit}`.trim()).join('\n') + '\n';
                     }
                     window.open(`https://t.me/share/url?url=${encodeURIComponent(txt)}`, '_blank');
                 },
@@ -697,6 +946,9 @@
                     localStorage.setItem('sk_photos_v34', JSON.stringify(this.userPhotos));
                     localStorage.setItem(lastServingsStorageKey, JSON.stringify(this.lastServings));
                     localStorage.setItem(favoritesStorageKey, JSON.stringify(this.favorites));
+                    localStorage.setItem(recipeNotesStorageKey, JSON.stringify(this.recipeNotes));
+                    localStorage.setItem(recipeStatusStorageKey, JSON.stringify(this.recipeStatus));
+                    this.saveShoppingExtras();
                 }
             },
             watch: {
